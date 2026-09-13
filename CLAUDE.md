@@ -6,6 +6,37 @@
 > documento usado no ERP ContFácil (Movbank) — é o "pilar" que sobrevive
 > entre sessões, quando a conversa é descartada.
 
+## ⚠️ Pendências no momento (13/09/2026) — ler antes de continuar
+
+Sessão anterior rodou num ambiente **remoto/cloud** (Claude Code on the
+web), sem acesso ao Mac do Alcides nem à VPS por SSH — mesma limitação já
+registrada no `CLAUDE.md` do MecOS. Ficou assim:
+
+1. **Nenhuma conta de e-mail real cadastrada ainda.** O código foi testado
+   só com dados fictícios inseridos direto no banco (ver v0.1 no
+   Histórico) — o fluxo real de IMAP/SMTP contra um provedor de verdade
+   (Gmail, ou o e-mail próprio da Movbank/Movcont/Clavion) **nunca rodou**.
+   Primeira coisa a validar numa sessão nova.
+2. **Não está instalado em lugar nenhum que o Alcides acesse.** Só existe
+   no GitHub (`Alcidesmov/mail-center`, privado) e no container
+   descartável daquela sessão. Ele ainda não baixou/rodou local no Mac
+   nem existe deploy ao vivo.
+3. **Deploy na VPS: só o runbook está pronto, nada foi executado.** Ver
+   `docs/DEPLOY_VPS.md` — passo a passo completo pra colar no Terminal do
+   painel Hostinger (mesmo caminho do ERP ContFácil, sem precisar de SSH).
+   Decisão em aberto: repositório é **privado**, então o `git clone` na
+   VPS vai pedir autenticação (PAT do GitHub) — se a sessão nova tiver
+   acesso à VPS via SSH local, pode fazer esse passo; se for outra sessão
+   remota, vai precisar que o Alcides cole os comandos ele mesmo.
+   Subdomínio sugerido (ainda não confirmado nem criado): 
+   `mail.srv1697060.hstgr.cloud`.
+
+**Se esta sessão nova rodar local no Mac do Alcides** (CLI ou app
+desktop, não mais "Claude Code on the web"): aí sim há acesso real a
+SSH/Chrome/Finder — pode seguir o `docs/DEPLOY_VPS.md` direto, ou instalar
+local primeiro via `INICIAR_MAIL_CENTER.command` pra testar antes de
+publicar.
+
 ## 1. Contexto
 
 Sistema de mensageria (e-mail) próprio para o Alcides usar no dia a dia das
@@ -161,4 +192,7 @@ anexos(id, mensagem_id FK, nome_arquivo, content_type, tamanho, caminho_disco)
   local + `\Seen` no servidor). Testado localmente com dados fictícios
   (inserção direta no banco) — fluxo real de IMAP/SMTP ainda não testado
   contra um provedor de verdade, porque nenhuma conta real foi cadastrada
-  ainda nesta sessão.
+  ainda nesta sessão. Também nesta versão: lançador de duplo clique
+  (`INICIAR_MAIL_CENTER.command`, mesmo padrão dos outros dois projetos) e
+  `docs/DEPLOY_VPS.md` (runbook de deploy, não executado ainda — ver
+  callout de pendências no topo deste arquivo).
