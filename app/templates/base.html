@@ -1,0 +1,26 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>{% block titulo %}Mail Center{% endblock %}</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script>
+    tailwind.config = {
+      theme: { extend: { fontFamily: { sans: ['Poppins', 'system-ui', 'sans-serif'] },
+        colors: { marinho: '#262e44', dourado: '#8a6e43', violeta: '#5c73c1', cinza: '#d6d8d5' } } }
+    }
+  </script>
+  <style>
+    body { font-family: 'Poppins', system-ui, sans-serif; }
+    ::-webkit-scrollbar { width: 8px; height: 8px; }
+    ::-webkit-scrollbar-thumb { background: #d6d8d5; border-radius: 8px; }
+    .linha-mensagem.ativa { background: #eef1fb; }
+  </style>
+</head>
+<body class="h-screen overflow-hidden bg-white text-marinho">
+  {% block conteudo %}{% endblock %}
+</body>
+</html>

@@ -1,0 +1,150 @@
+{% extends "base.html" %}
+{% block titulo %}{{ pasta.nome_exibicao }} · {{ conta.nome_exibicao }} — Mail Center{% endblock %}
+{% block conteudo %}
+<div class="flex h-screen">
+
+  {# ---------------- Coluna 1: contas + pastas ---------------- #}
+  <aside class="w-60 shrink-0 bg-marinho text-white flex flex-col">
+    <div class="px-4 py-4 flex items-center gap-2 border-b border-white/10">
+      <div class="w-8 h-8 rounded-lg bg-dourado flex items-center justify-center font-bold text-marinho">M</div>
+      <span class="font-semibold tracking-tight">Mail Center</span>
+    </div>
+
+    <a href="/compor?conta_id={{ conta.id }}"
+       class="mx-4 mt-4 mb-2 inline-flex items-center justify-center gap-2 bg-dourado text-marinho font-medium
+              rounded-lg py-2 px-3 hover:brightness-110 transition">
+      + Nova mensagem
+    </a>
+
+    <div class="flex-1 overflow-y-auto px-2 pb-4">
+      {% for c in contas %}
+      <div class="mt-4">
+        <div class="flex items-center gap-2 px-2 py-1">
+          <span class="w-2.5 h-2.5 rounded-full shrink-0" style="background:{{ c.cor }}"></span>
+          <span class="text-sm font-medium truncate {{ 'text-dourado' if c.id == conta.id else 'text-white/90' }}">
+            {{ c.nome_exibicao }}
+          </span>
+        </div>
+        <div class="ml-4 border-l border-white/10 pl-2">
+          {% for p in c.pastas %}
+          <a href="/caixa/{{ c.id }}/{{ p.id }}"
+             class="flex items-center justify-between text-sm px-2 py-1.5 rounded-md
+                    {{ 'bg-white/10 text-white' if p.id == pasta.id else 'text-white/70 hover:bg-white/5 hover:text-white' }}">
+            <span class="truncate">{{ p.nome_exibicao }}</span>
+            {% if p.nao_lidas %}
+            <span class="text-xs bg-dourado text-marinho rounded-full px-1.5 py-0.5 font-semibold">{{ p.nao_lidas }}</span>
+            {% endif %}
+          </a>
+          {% endfor %}
+        </div>
+      </div>
+      {% endfor %}
+    </div>
+
+    <a href="/contas" class="px-4 py-3 text-xs text-white/60 hover:text-white border-t border-white/10">
+      ⚙ Gerenciar contas
+    </a>
+  </aside>
+
+  {# ---------------- Coluna 2: lista de mensagens ---------------- #}
+  <section class="w-[360px] shrink-0 border-r border-cinza flex flex-col">
+    <div class="px-4 py-3 border-b border-cinza">
+      <div class="flex items-center justify-between">
+        <h1 class="font-semibold text-marinho">{{ pasta.nome_exibicao }}</h1>
+        <form method="post" action="/contas/{{ conta.id }}/sincronizar">
+          <button type="submit" title="Sincronizar agora"
+                  class="text-xs text-violeta hover:text-marinho border border-violeta/30 rounded-md px-2 py-1">
+            ↻ Sincronizar
+          </button>
+        </form>
+      </div>
+      <form method="get" action="/caixa/{{ conta.id }}/{{ pasta.id }}" class="mt-2">
+        <input type="text" name="q" value="{{ termo_busca }}" placeholder="Pesquisar nesta pasta..."
+               class="w-full text-sm border border-cinza rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-violeta/40">
+      </form>
+    </div>
+
+    <div class="flex-1 overflow-y-auto">
+      {% if not mensagens %}
+      <p class="text-sm text-[#5E6269] text-center mt-10 px-6">
+        {{ "Nenhum resultado para essa busca." if termo_busca else "Nenhuma mensagem por aqui ainda." }}
+      </p>
+      {% endif %}
+      {% for m in mensagens %}
+      <a href="/caixa/{{ conta.id }}/{{ pasta.id }}?msg={{ m.id }}{{ '&q='~termo_busca if termo_busca else '' }}"
+         class="linha-mensagem block px-4 py-3 border-b border-cinza/70 hover:bg-[#f7f8fa]
+                {{ 'ativa' if mensagem_aberta and mensagem_aberta.id == m.id else '' }}">
+        <div class="flex items-center justify-between gap-2">
+          <span class="text-sm truncate {{ 'font-semibold text-marinho' if not m.lida else 'text-[#40444D]' }}">
+            {{ m.remetente_nome or m.remetente_email }}
+          </span>
+          <span class="text-xs text-[#5E6269] shrink-0">{{ m.data_hora | data_br(false) }}</span>
+        </div>
+        <div class="text-sm truncate {{ 'font-medium text-marinho' if not m.lida else 'text-[#40444D]' }}">
+          {{ m.assunto }}
+        </div>
+        <div class="text-xs text-[#5E6269] truncate">{{ m.corpo_texto[:90] }}</div>
+      </a>
+      {% endfor %}
+    </div>
+  </section>
+
+  {# ---------------- Coluna 3: leitura ---------------- #}
+  <section class="flex-1 overflow-y-auto bg-[#fbfbfa]">
+    {% if mensagem_aberta %}
+    <div class="max-w-3xl mx-auto px-8 py-6">
+      <div class="flex items-start justify-between gap-4">
+        <h2 class="text-xl font-semibold text-marinho">{{ mensagem_aberta.assunto }}</h2>
+        <div class="flex gap-2 shrink-0">
+          <a href="/compor?conta_id={{ conta.id }}&mensagem_id={{ mensagem_aberta.id }}&modo=responder"
+             class="text-sm border border-cinza rounded-lg px-3 py-1.5 hover:bg-white">↩ Responder</a>
+          <a href="/compor?conta_id={{ conta.id }}&mensagem_id={{ mensagem_aberta.id }}&modo=encaminhar"
+             class="text-sm border border-cinza rounded-lg px-3 py-1.5 hover:bg-white">↪ Encaminhar</a>
+        </div>
+      </div>
+
+      <div class="flex items-center gap-3 mt-4">
+        <div class="w-9 h-9 rounded-full bg-violeta text-white flex items-center justify-center text-sm font-semibold shrink-0">
+          {{ (mensagem_aberta.remetente_nome or mensagem_aberta.remetente_email) | iniciais }}
+        </div>
+        <div class="text-sm">
+          <div class="font-medium text-marinho">{{ mensagem_aberta.remetente_nome or mensagem_aberta.remetente_email }}</div>
+          <div class="text-[#5E6269]">
+            para {{ mensagem_aberta.destinatarios | map(attribute='email') | join(', ') if mensagem_aberta.destinatarios else conta.email }}
+          </div>
+        </div>
+        <div class="ml-auto text-xs text-[#5E6269]">{{ mensagem_aberta.data_hora | data_br }}</div>
+      </div>
+
+      {% if anexos %}
+      <div class="flex flex-wrap gap-2 mt-4">
+        {% for a in anexos %}
+        <a href="/anexo/{{ a.id }}"
+           class="text-xs border border-cinza rounded-lg px-3 py-1.5 hover:bg-white flex items-center gap-1.5">
+          📎 {{ a.nome_arquivo }}
+        </a>
+        {% endfor %}
+      </div>
+      {% endif %}
+
+      <div class="mt-6 border-t border-cinza pt-4">
+        {% if mensagem_aberta.corpo_html %}
+        <iframe id="corpo-email" sandbox="" class="w-full border-0"
+                srcdoc="{{ mensagem_aberta.corpo_html }}"
+                onload="this.style.height = (this.contentWindow.document.body.scrollHeight + 24) + 'px'"></iframe>
+        {% else %}
+        <div class="text-sm text-marinho whitespace-pre-wrap leading-relaxed">{{ mensagem_aberta.corpo_texto }}</div>
+        {% endif %}
+      </div>
+    </div>
+    {% else %}
+    <div class="h-full flex items-center justify-center text-center px-8">
+      <div>
+        <div class="text-5xl mb-3">✉️</div>
+        <p class="text-[#5E6269] text-sm">Selecione uma mensagem para ler.</p>
+      </div>
+    </div>
+    {% endif %}
+  </section>
+</div>
+{% endblock %}

@@ -1,0 +1,85 @@
+{% extends "base.html" %}
+{% block titulo %}Nova mensagem — Mail Center{% endblock %}
+{% block conteudo %}
+<div class="h-screen overflow-y-auto bg-[#fbfbfa]">
+  <div class="max-w-2xl mx-auto px-6 py-8">
+    <a href="/caixa/{{ conta_id }}/1" onclick="history.back(); return false;"
+       class="text-sm text-violeta hover:text-marinho">← Cancelar</a>
+    <h1 class="text-2xl font-semibold text-marinho mt-2 mb-6">Nova mensagem</h1>
+
+    <form method="post" action="/enviar" enctype="multipart/form-data" id="form-compor" class="space-y-3">
+      <div>
+        <label class="text-xs font-medium text-[#40444D]">De</label>
+        <select name="conta_id" class="w-full border border-cinza rounded-lg px-3 py-2 text-sm mt-1">
+          {% for c in contas %}
+          <option value="{{ c.id }}" {{ 'selected' if c.id == conta_id else '' }}
+                  style="color:{{ c.cor }}">{{ c.nome_exibicao }} — {{ c.email }}</option>
+          {% endfor %}
+        </select>
+      </div>
+
+      <div>
+        <label class="text-xs font-medium text-[#40444D]">Para</label>
+        <input name="para" required value="{{ prefill.para }}" placeholder="destinatario@exemplo.com, outro@exemplo.com"
+               class="w-full border border-cinza rounded-lg px-3 py-2 text-sm mt-1">
+      </div>
+
+      <div class="flex gap-3 text-xs">
+        <button type="button" id="botao-cc" class="text-violeta">+ Cc</button>
+        <button type="button" id="botao-bcc" class="text-violeta">+ Cco</button>
+      </div>
+      <div id="campo-cc" class="hidden">
+        <label class="text-xs font-medium text-[#40444D]">Cc</label>
+        <input name="cc" class="w-full border border-cinza rounded-lg px-3 py-2 text-sm mt-1">
+      </div>
+      <div id="campo-bcc" class="hidden">
+        <label class="text-xs font-medium text-[#40444D]">Cco</label>
+        <input name="bcc" class="w-full border border-cinza rounded-lg px-3 py-2 text-sm mt-1">
+      </div>
+
+      <div>
+        <label class="text-xs font-medium text-[#40444D]">Assunto</label>
+        <input name="assunto" value="{{ prefill.assunto }}"
+               class="w-full border border-cinza rounded-lg px-3 py-2 text-sm mt-1">
+      </div>
+
+      <input type="hidden" name="em_resposta_a" value="{{ prefill.em_resposta_a }}">
+      <input type="hidden" name="corpo" id="corpo-oculto">
+
+      <div>
+        <div class="flex gap-1 border border-cinza border-b-0 rounded-t-lg px-2 py-1.5 bg-[#f7f8fa]">
+          <button type="button" onclick="document.execCommand('bold')" class="w-7 h-7 text-sm font-bold hover:bg-white rounded">B</button>
+          <button type="button" onclick="document.execCommand('italic')" class="w-7 h-7 text-sm italic hover:bg-white rounded">I</button>
+          <button type="button" onclick="document.execCommand('underline')" class="w-7 h-7 text-sm underline hover:bg-white rounded">U</button>
+          <button type="button" onclick="document.execCommand('insertUnorderedList')" class="w-7 h-7 text-sm hover:bg-white rounded">•—</button>
+          <button type="button" onclick="const u=prompt('URL do link:'); if(u) document.execCommand('createLink', false, u)"
+                  class="w-7 h-7 text-sm hover:bg-white rounded">🔗</button>
+        </div>
+        <div id="corpo-editavel" contenteditable="true"
+             class="w-full min-h-[260px] border border-cinza rounded-b-lg px-3 py-3 text-sm leading-relaxed focus:outline-none focus:ring-2 focus:ring-violeta/30"
+        >{{ prefill.corpo | safe }}</div>
+      </div>
+
+      <div>
+        <label class="text-xs font-medium text-[#40444D]">Anexos</label>
+        <input type="file" name="anexos" multiple class="block text-sm mt-1">
+      </div>
+
+      <div class="flex justify-end gap-2 pt-2">
+        <button type="submit"
+                class="bg-dourado text-marinho font-medium rounded-lg px-6 py-2.5 hover:brightness-110">
+          Enviar
+        </button>
+      </div>
+    </form>
+  </div>
+</div>
+
+<script>
+  document.getElementById('botao-cc').addEventListener('click', () => document.getElementById('campo-cc').classList.remove('hidden'));
+  document.getElementById('botao-bcc').addEventListener('click', () => document.getElementById('campo-bcc').classList.remove('hidden'));
+  document.getElementById('form-compor').addEventListener('submit', () => {
+    document.getElementById('corpo-oculto').value = document.getElementById('corpo-editavel').innerHTML;
+  });
+</script>
+{% endblock %}
