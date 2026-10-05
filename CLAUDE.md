@@ -181,6 +181,11 @@ anexos(id, mensagem_id FK, nome_arquivo, content_type, tamanho, caminho_disco)
   (nome, número, partido), ordenação por coluna, visão "Por partido" e CSV.
   Tudo filtrado no navegador; dados do TSE entram via `textContent`, nunca
   `innerHTML`.
+- **Visão "Blocos"**: soma de votos nominais (sem legenda) dos partidos
+  marcados, com atalhos "Conservadores (PL, Podemos, PRD)", "Direita ampla"
+  e "Esquerda". As listas são **classificação do Alcides/da IA, editável**
+  na tela, não dado do TSE. Patriota não existe mais (fundiu com o PTB em
+  2023 e virou PRD). Seleção lembrada no navegador (localStorage).
 - "%" = percentual sobre os votos válidos do cargo (`pvapn` do TSE). A
   situação (Eleito, Suplente…) vem do TSE e pode estar vazia até a
   totalização final — em 05/10/2026 vários estados ainda vinham sem
@@ -236,3 +241,6 @@ anexos(id, mensagem_id FK, nome_arquivo, content_type, tamanho, caminho_disco)
 - **v0.4** (05/10/2026) — Rumo redefinido: VPS primeiro, Git depois, local
   abandonado por enquanto. Documentação (CLAUDE.md, README, runbook)
   atualizada; nenhum código alterado.
+- **v0.5** (05/10/2026) — Visão "Blocos" no módulo Eleições e no retrato
+  mobile. Dep. Federal, Brasil, 100% apurado: PL + PODE + PRD = 32.206.355
+  votos nominais (28,24% dos válidos). Testado contra a API real.

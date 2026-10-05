@@ -51,6 +51,7 @@
       <div class="inline-flex rounded-lg border border-cinza overflow-hidden text-sm">
         <button type="button" id="vistaCand" class="px-3 py-1.5">Candidatos</button>
         <button type="button" id="vistaPart" class="px-3 py-1.5">Por partido</button>
+        <button type="button" id="vistaBloco" class="px-3 py-1.5">Blocos</button>
       </div>
       <button type="button" id="exportar" class="text-violeta hover:text-marinho">⬇ Baixar CSV</button>
       <span id="contagem" class="text-[#5E6269]"></span>
@@ -62,7 +63,8 @@
     <div id="erro" class="hidden mt-4 border border-red-300 bg-red-50 text-red-800 text-sm rounded-lg px-4 py-3"></div>
     <div id="carregando" class="mt-6 text-sm text-[#5E6269]">Carregando…</div>
 
-    <div class="mt-4 overflow-x-auto border border-cinza rounded-xl bg-white">
+    <div id="blocos" class="hidden mt-4"></div>
+    <div id="tabelaBox" class="mt-4 overflow-x-auto border border-cinza rounded-xl bg-white">
       <table class="w-full text-sm">
         <thead id="cabeca" class="bg-[#f3f4f2] text-left text-xs uppercase tracking-wide text-[#5E6269]"></thead>
         <tbody id="corpo"></tbody>
@@ -139,7 +141,56 @@
     return linhas;
   }
 
+  const PRESETS = {
+    'Conservadores (PL, Podemos, PRD)': ['PL', 'PODE', 'PRD'],
+    'Direita ampla': ['PL', 'PODE', 'PRD', 'REPUBLICANOS', 'PP', 'UNIÃO', 'NOVO', 'MISSÃO', 'DC'],
+    'Esquerda': ['PT', 'PSOL', 'PSB', 'PDT', 'PCDOB', 'PV', 'REDE', 'PSTU', 'UP', 'PCO'],
+  };
+  let selecao = new Set(PRESETS['Conservadores (PL, Podemos, PRD)']);
+  try { const g = JSON.parse(localStorage.getItem('eleicoes_bloco') || 'null'); if (Array.isArray(g)) selecao = new Set(g); } catch (e) {}
+  const salvarSelecao = () => { try { localStorage.setItem('eleicoes_bloco', JSON.stringify([...selecao])); } catch (e) {} };
+
+  function desenharBlocos() {
+    const d = estado.dados, box = $('blocos');
+    const partidos = porPartido(d.candidatos);
+    const tot = d.resumo.votos_validos || 1;
+    const marcados = partidos.filter((x) => selecao.has(x.partido));
+    const v = marcados.reduce((a, x) => a + x.votos, 0), c = marcados.reduce((a, x) => a + x.candidatos, 0);
+    const e = marcados.reduce((a, x) => a + x.eleitos, 0);
+    box.replaceChildren();
+    const pre = el('div', 'flex flex-wrap gap-2');
+    Object.keys(PRESETS).forEach((k) => {
+      const b = el('button', 'border border-dashed border-[#5E6269] rounded-lg px-3 py-1.5 text-sm hover:bg-white', k);
+      b.type = 'button'; b.addEventListener('click', () => { selecao = new Set(PRESETS[k]); salvarSelecao(); desenharBlocos(); });
+      pre.appendChild(b);
+    });
+    const chips = el('div', 'flex flex-wrap gap-1.5 mt-3');
+    partidos.map((x) => x.partido).sort().forEach((sg) => {
+      const on = selecao.has(sg);
+      const b = el('button', 'rounded-full border px-3 py-1 text-sm ' + (on ? 'bg-marinho text-white border-marinho' : 'bg-white border-cinza'), sg);
+      b.type = 'button'; b.addEventListener('click', () => { on ? selecao.delete(sg) : selecao.add(sg); salvarSelecao(); desenharBlocos(); });
+      chips.appendChild(b);
+    });
+    const total = el('div', 'mt-4 border-2 border-marinho rounded-xl bg-white px-4 py-3');
+    total.append(el('div', 'text-xs uppercase tracking-wide text-[#5E6269]', 'Soma dos partidos marcados'),
+      el('div', 'text-3xl font-semibold tabular-nums', fmtInt(v) + ' votos'),
+      el('div', 'text-sm text-[#5E6269]', fmtPct(100 * v / tot) + ' dos votos válidos · ' + fmtInt(c) + ' candidatos' + (e ? ' · ' + e + ' eleitos' : '')),
+      el('div', 'text-sm text-[#5E6269]', 'Restante: ' + fmtInt(tot - v) + ' (' + fmtPct(100 * (tot - v) / tot) + ')'));
+    const lista = el('div', 'mt-3 grid gap-2 md:grid-cols-2');
+    marcados.forEach((x) => {
+      const row = el('div', 'border border-cinza rounded-lg bg-white px-3 py-2 flex justify-between gap-3');
+      row.append(el('span', 'font-medium', x.partido), el('span', 'tabular-nums text-right', fmtInt(x.votos) + ' · ' + fmtPct(100 * x.votos / tot)));
+      lista.appendChild(row);
+    });
+    box.append(pre, chips, total, lista);
+    $('contagem').textContent = 'Votos nominais em candidatos (sem votos de legenda)';
+  }
+
   function desenhar() {
+    const bloco = estado.vista === 'bloco';
+    $('blocos').classList.toggle('hidden', !bloco);
+    $('tabelaBox').classList.toggle('hidden', bloco);
+    if (bloco) { $('maisLinhas').classList.add('hidden'); if (estado.dados) desenharBlocos(); return; }
     const cols = colunas();
     let linhas = filtrar();
     if (estado.vista === 'part') linhas = porPartido(linhas);
@@ -212,6 +263,7 @@
     });
     $('vistaCand').className = 'px-3 py-1.5 ' + (estado.vista === 'cand' ? 'bg-marinho text-white' : 'bg-white');
     $('vistaPart').className = 'px-3 py-1.5 ' + (estado.vista === 'part' ? 'bg-marinho text-white' : 'bg-white');
+    $('vistaBloco').className = 'px-3 py-1.5 ' + (estado.vista === 'bloco' ? 'bg-marinho text-white' : 'bg-white');
   }
 
   async function carregar() {
@@ -252,6 +304,7 @@
   $('uf').addEventListener('change', () => { $('partido').value = ''; carregar(); });
   ['busca', 'partido', 'minVotos', 'minPct', 'soEleitos'].forEach((id) =>
     $(id).addEventListener('input', () => { estado.limite = LOTE; desenhar(); }));
+  $('vistaBloco').addEventListener('click', () => { estado.vista = 'bloco'; marcarAbas(); desenhar(); });
   $('vistaCand').addEventListener('click', () => { estado.vista = 'cand'; marcarAbas(); desenhar(); });
   $('vistaPart').addEventListener('click', () => { estado.vista = 'part'; marcarAbas(); desenhar(); });
   $('maisLinhas').addEventListener('click', () => { estado.limite += LOTE; desenhar(); });
