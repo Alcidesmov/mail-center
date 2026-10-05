@@ -7,7 +7,7 @@ from fastapi import FastAPI, Form, Request, UploadFile
 from fastapi.responses import FileResponse, JSONResponse, RedirectResponse
 from starlette.datastructures import FormData
 
-from app import db, eleicoes, imap_sync, smtp_send
+from app import auth, db, eleicoes, imap_sync, smtp_send
 from app.config import obter_intervalo_sync_minutos
 from app.crypto import cifrar
 from app.config import obter_chave_cifra
@@ -15,6 +15,46 @@ from app.normalizar import normalizar
 from app.web import render
 
 app = FastAPI(title="Mail Center")
+
+
+def _proximo_seguro(destino: str) -> str:
+    # só caminho interno — evita redirecionar o login para site de terceiros
+    return destino if destino.startswith("/") and not destino.startswith("//") else "/"
+
+
+@app.middleware("http")
+async def exigir_login(request: Request, call_next):
+    if auth.exigida() and request.url.path != "/login" \
+            and not auth.sessao_valida(request.cookies.get(auth.COOKIE)):
+        return RedirectResponse(f"/login?proximo={request.url.path}", status_code=303)
+    return await call_next(request)
+
+
+@app.get("/login")
+def login_pagina(request: Request, proximo: str = "/"):
+    return render(request, "login.html", {"erro": None, "proximo": _proximo_seguro(proximo)})
+
+
+@app.post("/login")
+def login_enviar(request: Request, senha: str = Form(""), proximo: str = Form("/")):
+    destino = _proximo_seguro(proximo)
+    if auth.bloqueado():
+        return render(request, "login.html", {"erro": "Muitas tentativas. Aguarde 10 minutos.", "proximo": destino})
+    if not auth.exigida() or not auth.senha_confere(senha):
+        auth.registrar_falha()
+        time.sleep(1)
+        return render(request, "login.html", {"erro": "Senha incorreta.", "proximo": destino})
+    resp = RedirectResponse(destino, status_code=303)
+    resp.set_cookie(auth.COOKIE, auth.criar_sessao(), max_age=auth.DURACAO_SEGUNDOS, httponly=True,
+                    samesite="lax", secure=request.headers.get("x-forwarded-proto") == "https")
+    return resp
+
+
+@app.get("/sair")
+def sair():
+    resp = RedirectResponse("/login", status_code=303)
+    resp.delete_cookie(auth.COOKIE)
+    return resp
 
 CORES_SUGERIDAS = ["#262e44", "#5c73c1", "#8a6e43", "#1f7a5c", "#a13d3d", "#6b3fa0"]
 

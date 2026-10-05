@@ -35,6 +35,18 @@ chown -R mailapp:mailapp /opt/mail-center
 > MecOS). Depois de confirmar que o clone funcionou, pode revogar o
 > token — não fica salvo em lugar nenhum do servidor.
 
+## 1.1 Senha de acesso (OBRIGATÓRIO antes do passo 2)
+
+Sem isso o sistema sobe **aberto**: qualquer um com o endereço lê as caixas
+de e-mail e envia mensagens em nome das empresas.
+
+```bash
+cd /opt/mail-center && sudo -u mailapp .venv/bin/python -m app.definir_senha
+```
+
+Escolha uma senha de 12+ caracteres. Ela fica só como hash no `.env`.
+Para trocar depois: mesmo comando + `systemctl restart mail-center`.
+
 ## 2. Serviço systemd (mantém rodando, reinicia sozinho)
 
 ```bash

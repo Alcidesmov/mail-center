@@ -159,6 +159,12 @@ anexos(id, mensagem_id FK, nome_arquivo, content_type, tamanho, caminho_disco)
   sessão do usuário.
 - `.env` nunca vai pro Git (`.gitignore`), mesmo padrão do ERP ContFácil.
 
+- **Senha de acesso** (`app/auth.py`): se `MAIL_CENTER_SENHA_HASH` existe no
+  `.env`, toda rota exige login (cookie assinado HMAC, 12 h, `HttpOnly`;
+  bloqueio de 10 min após 10 falhas). Sem o hash o app roda aberto — só
+  aceitável em `localhost`. **Na VPS é obrigatório** definir via
+  `python -m app.definir_senha` (passo 1.1 do `docs/DEPLOY_VPS.md`).
+
 ## 6.1 Módulo Eleições 2026 (`/eleicoes`, `app/eleicoes.py`)
 
 - Aba separada da caixa de e-mail (link "🗳 Eleições 2026" no rodapé da barra
@@ -223,3 +229,7 @@ anexos(id, mensagem_id FK, nome_arquivo, content_type, tamanho, caminho_disco)
   Governador, Senador e Dep. Federal por voto, % e partido. Testado contra a
   API real do TSE e no navegador (Playwright); fluxo de e-mail continua sem
   teste real.
+- **v0.3** (05/10/2026) — Senha de acesso (login por cookie assinado) para
+  poder publicar na VPS com segurança. Testado com TestClient (sem senha →
+  aberto; com senha → 303 para /login; cookie falso, senha errada e
+  bloqueio por tentativas).
