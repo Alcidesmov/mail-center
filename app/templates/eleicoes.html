@@ -1,0 +1,262 @@
+{% extends "base.html" %}
+{% block titulo %}Eleições 2026 — Mail Center{% endblock %}
+{% block conteudo %}
+<div class="h-screen overflow-y-auto bg-[#fbfbfa]">
+  <div class="max-w-6xl mx-auto px-6 py-8">
+    <a href="/" class="text-sm text-violeta hover:text-marinho">← Voltar para a caixa de entrada</a>
+    <div class="flex flex-wrap items-end justify-between gap-2 mt-2">
+      <div>
+        <h1 class="text-2xl font-semibold text-marinho">Eleições 2026 — resultado das urnas</h1>
+        <p class="text-sm text-[#40444D] mt-1">1º turno, 04/10/2026. Fonte: TSE (resultados.tse.jus.br), atualizado a cada 2 minutos.</p>
+      </div>
+      <span id="atualizado" class="text-xs text-[#5E6269]"></span>
+    </div>
+
+    {# ---- abas de cargo ---- #}
+    <div id="abas" class="mt-6 flex flex-wrap gap-1 border-b border-cinza">
+      {% for chave, rotulo in cargos.items() %}
+      <button type="button" data-cargo="{{ chave }}"
+              class="aba px-4 py-2 text-sm font-medium rounded-t-lg border border-b-0 border-transparent">{{ rotulo }}</button>
+      {% endfor %}
+    </div>
+
+    {# ---- filtros ---- #}
+    <div class="mt-4 grid gap-3 grid-cols-2 md:grid-cols-6">
+      <label class="col-span-2 text-xs text-[#5E6269]">Pesquisar (nome, nº ou partido)
+        <input id="busca" type="search" placeholder="ex.: Lula, 13, PL"
+               class="mt-1 w-full border border-cinza rounded-lg px-3 py-2 text-sm text-marinho bg-white">
+      </label>
+      <label class="text-xs text-[#5E6269]">Estado
+        <select id="uf" class="mt-1 w-full border border-cinza rounded-lg px-2 py-2 text-sm text-marinho bg-white">
+          <option value="TODOS">Brasil (todos os estados)</option>
+          {% for u in ufs %}<option value="{{ u }}">{{ u }}</option>{% endfor %}
+        </select>
+      </label>
+      <label class="text-xs text-[#5E6269]">Partido
+        <select id="partido" class="mt-1 w-full border border-cinza rounded-lg px-2 py-2 text-sm text-marinho bg-white">
+          <option value="">Todos</option>
+        </select>
+      </label>
+      <label class="text-xs text-[#5E6269]">Votos a partir de
+        <input id="minVotos" type="number" min="0" step="1000" placeholder="0"
+               class="mt-1 w-full border border-cinza rounded-lg px-3 py-2 text-sm text-marinho bg-white">
+      </label>
+      <label class="text-xs text-[#5E6269]">% a partir de
+        <input id="minPct" type="number" min="0" max="100" step="0.1" placeholder="0"
+               class="mt-1 w-full border border-cinza rounded-lg px-3 py-2 text-sm text-marinho bg-white">
+      </label>
+    </div>
+    <div class="mt-3 flex flex-wrap items-center gap-4 text-sm">
+      <label class="inline-flex items-center gap-2"><input id="soEleitos" type="checkbox"> Só eleitos / 2º turno</label>
+      <div class="inline-flex rounded-lg border border-cinza overflow-hidden text-sm">
+        <button type="button" id="vistaCand" class="px-3 py-1.5">Candidatos</button>
+        <button type="button" id="vistaPart" class="px-3 py-1.5">Por partido</button>
+      </div>
+      <button type="button" id="exportar" class="text-violeta hover:text-marinho">⬇ Baixar CSV</button>
+      <span id="contagem" class="text-[#5E6269]"></span>
+    </div>
+
+    {# ---- resumo ---- #}
+    <div id="resumo" class="mt-4 grid grid-cols-2 md:grid-cols-5 gap-3"></div>
+
+    <div id="erro" class="hidden mt-4 border border-red-300 bg-red-50 text-red-800 text-sm rounded-lg px-4 py-3"></div>
+    <div id="carregando" class="mt-6 text-sm text-[#5E6269]">Carregando…</div>
+
+    <div class="mt-4 overflow-x-auto border border-cinza rounded-xl bg-white">
+      <table class="w-full text-sm">
+        <thead id="cabeca" class="bg-[#f3f4f2] text-left text-xs uppercase tracking-wide text-[#5E6269]"></thead>
+        <tbody id="corpo"></tbody>
+      </table>
+    </div>
+    <button type="button" id="maisLinhas" class="hidden mt-3 text-sm text-violeta hover:text-marinho">Mostrar mais</button>
+    <p id="aviso" class="mt-4 text-xs text-[#5E6269]">
+      “% dos votos válidos” é o percentual do candidato sobre os votos válidos do cargo naquela abrangência.
+      A situação (Eleito, Suplente…) vem do TSE e pode ficar em branco até a totalização final.
+    </p>
+  </div>
+</div>
+
+<script>
+(function () {
+  const $ = (id) => document.getElementById(id);
+  const semAcento = (t) => (t || '').normalize('NFD').replace(/[̀-ͯ]/g, '').toUpperCase();
+  const fmtInt = (n) => Number(n).toLocaleString('pt-BR');
+  const fmtPct = (n) => Number(n).toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 }) + '%';
+  const LOTE = 300;
+
+  const estado = { cargo: 'presidente', dados: null, vista: 'cand', ordem: { campo: 'votos', asc: false }, limite: LOTE };
+
+  function el(tag, cls, texto) {
+    const e = document.createElement(tag);
+    if (cls) e.className = cls;
+    if (texto !== undefined) e.textContent = texto;   // textContent: nada de HTML vindo de fora
+    return e;
+  }
+
+  function colunas() {
+    const todos = estado.cargo !== 'presidente' && $('uf').value === 'TODOS';
+    if (estado.vista === 'part') {
+      return [['partido', 'Partido'], ['candidatos', 'Candidatos'], ['eleitos', 'Eleitos'], ['votos', 'Votos'], ['pct', '% dos votos válidos']];
+    }
+    const c = [['posicao', '#'], ['nome_urna', 'Candidato'], ['numero', 'Nº'], ['partido', 'Partido']];
+    if (todos || estado.cargo === 'deputado_federal') c.push(['uf', 'UF']);
+    c.push(['votos', 'Votos'], ['pct', '% dos votos válidos'], ['situacao', 'Situação']);
+    return c;
+  }
+
+  function filtrar() {
+    const d = estado.dados; if (!d) return [];
+    const q = semAcento($('busca').value).trim();
+    const part = $('partido').value;
+    const minV = Number($('minVotos').value) || 0;
+    const minP = Number($('minPct').value) || 0;
+    const so = $('soEleitos').checked;
+    let lista = d.candidatos.map((c, i) => Object.assign({ posicao: i + 1 }, c));
+    return lista.filter((c) =>
+      (!q || semAcento(c.nome + ' ' + c.nome_urna + ' ' + c.numero + ' ' + c.partido).includes(q)) &&
+      (!part || c.partido === part) && c.votos >= minV && c.pct >= minP &&
+      (!so || c.eleito || c.situacao === '2º turno'));
+  }
+
+  function porPartido(lista) {
+    const m = new Map();
+    for (const c of lista) {
+      const p = m.get(c.partido) || { partido: c.partido, candidatos: 0, eleitos: 0, votos: 0 };
+      p.candidatos++; p.votos += c.votos; if (c.eleito) p.eleitos++;
+      m.set(c.partido, p);
+    }
+    const validos = estado.dados.resumo.votos_validos || 1;
+    return [...m.values()].map((p) => Object.assign(p, { pct: 100 * p.votos / validos }));
+  }
+
+  function ordenar(linhas) {
+    const { campo, asc } = estado.ordem;
+    const txt = ['nome_urna', 'partido', 'uf', 'situacao', 'numero'].includes(campo);
+    linhas.sort((a, b) => {
+      const r = txt ? String(a[campo]).localeCompare(String(b[campo]), 'pt-BR') : a[campo] - b[campo];
+      return asc ? r : -r;
+    });
+    return linhas;
+  }
+
+  function desenhar() {
+    const cols = colunas();
+    let linhas = filtrar();
+    if (estado.vista === 'part') linhas = porPartido(linhas);
+    if (!cols.some((c) => c[0] === estado.ordem.campo)) estado.ordem = { campo: 'votos', asc: false };
+    ordenar(linhas);
+
+    const tr = el('tr');
+    for (const [campo, rotulo] of cols) {
+      const th = el('th', 'px-3 py-2 cursor-pointer select-none whitespace-nowrap', rotulo +
+        (estado.ordem.campo === campo ? (estado.ordem.asc ? ' ▲' : ' ▼') : ''));
+      th.addEventListener('click', () => {
+        estado.ordem = { campo, asc: estado.ordem.campo === campo ? !estado.ordem.asc : false };
+        estado.limite = LOTE; desenhar();
+      });
+      tr.appendChild(th);
+    }
+    $('cabeca').replaceChildren(tr);
+
+    const corpo = $('corpo');
+    corpo.replaceChildren();
+    for (const l of linhas.slice(0, estado.limite)) {
+      const row = el('tr', 'border-t border-cinza hover:bg-[#fbfbfa]');
+      for (const [campo] of cols) {
+        let v = l[campo], cls = 'px-3 py-2';
+        if (campo === 'votos') { v = fmtInt(v); cls += ' text-right tabular-nums'; }
+        else if (campo === 'pct') { v = fmtPct(v); cls += ' text-right tabular-nums'; }
+        else if (campo === 'nome_urna') cls += ' font-medium';
+        const td = el('td', cls, v === undefined || v === null ? '' : String(v));
+        if (campo === 'nome_urna' && l.vices && l.vices.length) td.title = 'Vice/suplentes: ' + l.vices.join(', ');
+        if (campo === 'nome_urna') td.title = (l.nome || '') + (td.title ? ' — ' + td.title : '');
+        if (campo === 'situacao' && (l.eleito || l.situacao === '2º turno')) td.className += ' text-[#1f7a5c] font-medium';
+        row.appendChild(td);
+      }
+      corpo.appendChild(row);
+    }
+    $('contagem').textContent = fmtInt(linhas.length) + (estado.vista === 'part' ? ' partidos' : ' candidatos');
+    $('maisLinhas').classList.toggle('hidden', linhas.length <= estado.limite);
+    estado.linhasAtuais = linhas; estado.colsAtuais = cols;
+  }
+
+  function desenharResumo() {
+    const r = estado.dados.resumo;
+    const itens = [
+      ['Seções apuradas', fmtPct(r.secoes_apuradas_pct)],
+      ['Comparecimento', fmtInt(r.comparecimento) + ' (' + fmtPct(r.comparecimento_pct) + ')'],
+      ['Votos válidos', fmtInt(r.votos_validos)],
+      ['Brancos', fmtInt(r.brancos)],
+      ['Nulos', fmtInt(r.nulos)],
+    ];
+    $('resumo').replaceChildren(...itens.map(([k, v]) => {
+      const box = el('div', 'border border-cinza rounded-xl bg-white px-3 py-2');
+      box.append(el('div', 'text-xs text-[#5E6269]', k), el('div', 'text-sm font-semibold text-marinho', v));
+      return box;
+    }));
+    $('atualizado').textContent = 'TSE: ' + r.atualizado;
+  }
+
+  function preencherPartidos() {
+    const atual = $('partido').value;
+    const siglas = [...new Set(estado.dados.candidatos.map((c) => c.partido))].sort();
+    $('partido').replaceChildren(new Option('Todos', ''), ...siglas.map((s) => new Option(s, s)));
+    if (siglas.includes(atual)) $('partido').value = atual;
+  }
+
+  function marcarAbas() {
+    document.querySelectorAll('.aba').forEach((b) => {
+      const ativa = b.dataset.cargo === estado.cargo;
+      b.className = 'aba px-4 py-2 text-sm font-medium rounded-t-lg border border-b-0 ' +
+        (ativa ? 'bg-white border-cinza text-marinho -mb-px' : 'border-transparent text-[#5E6269] hover:text-marinho');
+    });
+    $('vistaCand').className = 'px-3 py-1.5 ' + (estado.vista === 'cand' ? 'bg-marinho text-white' : 'bg-white');
+    $('vistaPart').className = 'px-3 py-1.5 ' + (estado.vista === 'part' ? 'bg-marinho text-white' : 'bg-white');
+  }
+
+  async function carregar() {
+    const presidente = estado.cargo === 'presidente';
+    $('uf').disabled = presidente;
+    const uf = presidente ? 'BR' : $('uf').value;
+    $('carregando').classList.remove('hidden'); $('erro').classList.add('hidden');
+    marcarAbas();
+    try {
+      const resp = await fetch('/eleicoes/dados?cargo=' + encodeURIComponent(estado.cargo) + '&uf=' + encodeURIComponent(uf));
+      const json = await resp.json();
+      if (!resp.ok) throw new Error(json.erro || 'Falha ao buscar no TSE');
+      estado.dados = json; estado.limite = LOTE;
+      preencherPartidos(); desenharResumo(); desenhar();
+    } catch (e) {
+      estado.dados = null; $('corpo').replaceChildren(); $('resumo').replaceChildren();
+      $('erro').textContent = e.message; $('erro').classList.remove('hidden');
+    } finally {
+      $('carregando').classList.add('hidden');
+    }
+  }
+
+  function csv() {
+    const cols = estado.colsAtuais || [];
+    const esc = (v) => '"' + String(v ?? '').replace(/"/g, '""') + '"';
+    const linhas = [cols.map((c) => esc(c[1])).join(';')].concat(
+      (estado.linhasAtuais || []).map((l) => cols.map(([c]) => esc(c === 'pct' ? String(l[c]).replace('.', ',') : l[c])).join(';')));
+    const blob = new Blob(['﻿' + linhas.join('\n')], { type: 'text/csv;charset=utf-8' });
+    const a = el('a'); a.href = URL.createObjectURL(blob);
+    a.download = 'eleicoes2026-' + estado.cargo + '.csv'; a.click(); URL.revokeObjectURL(a.href);
+  }
+
+  document.querySelectorAll('.aba').forEach((b) => b.addEventListener('click', () => {
+    estado.cargo = b.dataset.cargo;
+    if (estado.cargo === 'governador' || estado.cargo === 'senador') { if (!$('uf').value) $('uf').value = 'TODOS'; }
+    $('partido').value = ''; carregar();
+  }));
+  $('uf').addEventListener('change', () => { $('partido').value = ''; carregar(); });
+  ['busca', 'partido', 'minVotos', 'minPct', 'soEleitos'].forEach((id) =>
+    $(id).addEventListener('input', () => { estado.limite = LOTE; desenhar(); }));
+  $('vistaCand').addEventListener('click', () => { estado.vista = 'cand'; marcarAbas(); desenhar(); });
+  $('vistaPart').addEventListener('click', () => { estado.vista = 'part'; marcarAbas(); desenhar(); });
+  $('maisLinhas').addEventListener('click', () => { estado.limite += LOTE; desenhar(); });
+  $('exportar').addEventListener('click', csv);
+  carregar();
+})();
+</script>
+{% endblock %}

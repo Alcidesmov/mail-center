@@ -159,6 +159,29 @@ anexos(id, mensagem_id FK, nome_arquivo, content_type, tamanho, caminho_disco)
   sessão do usuário.
 - `.env` nunca vai pro Git (`.gitignore`), mesmo padrão do ERP ContFácil.
 
+## 6.1 Módulo Eleições 2026 (`/eleicoes`, `app/eleicoes.py`)
+
+- Aba separada da caixa de e-mail (link "🗳 Eleições 2026" no rodapé da barra
+  lateral). Não depende de nenhuma conta de e-mail cadastrada.
+- Lê a API pública do TSE, sem chave:
+  `https://resultados.tse.jus.br/oficial/ele2026/<eleição>/dados/<uf>/<uf>-c<cargo>-e00<eleição>-u.json`
+  (`br` para Presidente). Eleição `6257` = Presidente; `6259` = Governador
+  (cargo `0003`), Senador (`0005`) e Dep. Federal (`0006`). O sufixo é `-u`;
+  o caminho `dados-simplificados/…-r.json` dá 404 nesta eleição.
+- Cache em memória de 2 min por URL; "Brasil" para Governador/Senador/Dep.
+  Federal baixa os 27 estados em paralelo e soma. Biblioteca padrão
+  (`urllib`), nenhuma dependência nova.
+- Tela: abas de cargo, filtro por UF/partido/votos/%, busca sem acento
+  (nome, número, partido), ordenação por coluna, visão "Por partido" e CSV.
+  Tudo filtrado no navegador; dados do TSE entram via `textContent`, nunca
+  `innerHTML`.
+- "%" = percentual sobre os votos válidos do cargo (`pvapn` do TSE). A
+  situação (Eleito, Suplente…) vem do TSE e pode estar vazia até a
+  totalização final — em 05/10/2026 vários estados ainda vinham sem
+  situação de Dep. Federal.
+- Só 1º turno (04/10/2026). Para o 2º turno (25/10) será preciso descobrir
+  os novos códigos de eleição em `comum/config/ele-c.json`.
+
 ## 7. Não fazer
 
 - Não trazer e-mail de Lixeira/Spam pra sincronização automática sem pedido
@@ -196,3 +219,7 @@ anexos(id, mensagem_id FK, nome_arquivo, content_type, tamanho, caminho_disco)
   (`INICIAR_MAIL_CENTER.command`, mesmo padrão dos outros dois projetos) e
   `docs/DEPLOY_VPS.md` (runbook de deploy, não executado ainda — ver
   callout de pendências no topo deste arquivo).
+- **v0.2** (05/10/2026) — Módulo Eleições 2026 (ver 6.1): Presidente,
+  Governador, Senador e Dep. Federal por voto, % e partido. Testado contra a
+  API real do TSE e no navegador (Playwright); fluxo de e-mail continua sem
+  teste real.

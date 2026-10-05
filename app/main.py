@@ -4,10 +4,10 @@ import time
 from pathlib import Path
 
 from fastapi import FastAPI, Form, Request, UploadFile
-from fastapi.responses import FileResponse, RedirectResponse
+from fastapi.responses import FileResponse, JSONResponse, RedirectResponse
 from starlette.datastructures import FormData
 
-from app import db, imap_sync, smtp_send
+from app import db, eleicoes, imap_sync, smtp_send
 from app.config import obter_intervalo_sync_minutos
 from app.crypto import cifrar
 from app.config import obter_chave_cifra
@@ -271,6 +271,26 @@ def _rotina_sincronizacao_automatica():
                 imap_sync.sincronizar_conta(conta_id)
         except Exception:
             continue  # best-effort — próximo ciclo tenta de novo, nunca derruba o servidor
+
+
+# --------------------------------------------------------------------------
+# Eleições 2026 (resultados das urnas — TSE)
+# --------------------------------------------------------------------------
+
+@app.get("/eleicoes")
+def eleicoes_pagina(request: Request):
+    return render(request, "eleicoes.html", {
+        "cargos": {k: v[2] for k, v in eleicoes.CARGOS.items()},
+        "ufs": eleicoes.UFS,
+    })
+
+
+@app.get("/eleicoes/dados")
+def eleicoes_dados(cargo: str = "presidente", uf: str = "BR"):
+    try:
+        return eleicoes.resultados(cargo, uf)
+    except eleicoes.ErroTSE as exc:
+        return JSONResponse({"erro": str(exc)}, status_code=502)
 
 
 @app.on_event("startup")
