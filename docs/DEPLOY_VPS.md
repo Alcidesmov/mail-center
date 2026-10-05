@@ -1,5 +1,11 @@
 # Deploy na VPS Hostinger — runbook
 
+> **Caminho principal do projeto** (decisão de 05/10/2026: VPS primeiro, Git
+> depois, localhost abandonado por enquanto). Pré-requisitos: token do
+> GitHub (PAT classic, escopo `repo`), subdomínio confirmado com DNS
+> apontado, e a senha de acesso do passo 1.1. Enquanto o PR #1 não for
+> mesclado, clonar com `git clone -b feat/modulo-eleicoes ...`.
+
 Mesmo servidor que já hospeda o ERP ContFácil (`/opt/erp-contfacil`,
 porta 8000) e o MecOS. Mail Center entra do mesmo jeito: usuário
 dedicado, systemd, Nginx como proxy reverso, HTTPS via Certbot.
