@@ -6,36 +6,35 @@
 > documento usado no ERP ContFácil (Movbank) — é o "pilar" que sobrevive
 > entre sessões, quando a conversa é descartada.
 
-## ⚠️ Pendências no momento (13/09/2026) — ler antes de continuar
+## ⚠️ Decisão de rumo (05/10/2026) — ler antes de continuar
 
-Sessão anterior rodou num ambiente **remoto/cloud** (Claude Code on the
-web), sem acesso ao Mac do Alcides nem à VPS por SSH — mesma limitação já
-registrada no `CLAUDE.md` do MecOS. Ficou assim:
+**Prioridade: VPS primeiro, Git depois. O uso em `localhost` está abandonado
+por enquanto** (decisão do Alcides). Não propor "testar local primeiro".
 
-1. **Nenhuma conta de e-mail real cadastrada ainda.** O código foi testado
-   só com dados fictícios inseridos direto no banco (ver v0.1 no
-   Histórico) — o fluxo real de IMAP/SMTP contra um provedor de verdade
-   (Gmail, ou o e-mail próprio da Movbank/Movcont/Clavion) **nunca rodou**.
-   Primeira coisa a validar numa sessão nova.
-2. **Não está instalado em lugar nenhum que o Alcides acesse.** Só existe
-   no GitHub (`Alcidesmov/mail-center`, privado) e no container
-   descartável daquela sessão. Ele ainda não baixou/rodou local no Mac
-   nem existe deploy ao vivo.
-3. **Deploy na VPS: só o runbook está pronto, nada foi executado.** Ver
-   `docs/DEPLOY_VPS.md` — passo a passo completo pra colar no Terminal do
-   painel Hostinger (mesmo caminho do ERP ContFácil, sem precisar de SSH).
-   Decisão em aberto: repositório é **privado**, então o `git clone` na
-   VPS vai pedir autenticação (PAT do GitHub) — se a sessão nova tiver
-   acesso à VPS via SSH local, pode fazer esse passo; se for outra sessão
-   remota, vai precisar que o Alcides cole os comandos ele mesmo.
-   Subdomínio sugerido (ainda não confirmado nem criado): 
+Estado atual:
+
+1. **Nenhuma conta de e-mail real cadastrada ainda.** O fluxo real de
+   IMAP/SMTP contra um provedor de verdade (Gmail ou e-mail próprio da
+   Movbank/Movcont/Clavion) **nunca rodou** — validar logo após o deploy.
+2. **Nada está no ar.** O código existe no GitHub (`Alcidesmov/mail-center`,
+   privado), no PR #1 (branch `feat/modulo-eleicoes`: módulo Eleições +
+   senha de acesso, ainda em rascunho) e no container descartável das
+   sessões. O Alcides não baixou nem rodou nada.
+3. **Deploy na VPS: só o runbook está pronto.** Ver `docs/DEPLOY_VPS.md`
+   (Terminal do painel Hostinger, sem SSH). Sessões na nuvem **não alcançam**
+   a VPS nem o Chrome do Alcides: quem cola os comandos é ele, em blocos
+   que a IA entrega e confere. Sessão no app desktop/Mac, com a extensão
+   Claude in Chrome, pode conduzir direto.
+4. **Senha de acesso é pré-requisito do deploy** (passo 1.1 do runbook) —
+   sem ela o sistema fica aberto na internet com as caixas das empresas.
+5. **Git:** o clone na VPS precisa de PAT do GitHub (repositório privado;
+   Alcides ainda não gerou). Fazer merge do PR #1 quando ele aprovar.
+6. Subdomínio sugerido (não confirmado nem criado):
    `mail.srv1697060.hstgr.cloud`.
-
-**Se esta sessão nova rodar local no Mac do Alcides** (CLI ou app
-desktop, não mais "Claude Code on the web"): aí sim há acesso real a
-SSH/Chrome/Finder — pode seguir o `docs/DEPLOY_VPS.md` direto, ou instalar
-local primeiro via `INICIAR_MAIL_CENTER.command` pra testar antes de
-publicar.
+7. Eleições: dados, API do TSE, resultados e o "Relatório 1" estão em
+   `docs/ELEICOES_2026.md`. O retrato mobile (artefato privado no claude.ai)
+   ainda não está no Git; salvar em `docs/apuracao_mobile.html` só se o
+   Alcides pedir.
 
 ## 1. Contexto
 
@@ -49,8 +48,9 @@ Multi-conta desde a primeira versão — cada empresa é uma caixa de e-mail
 conectada separadamente (uma linha na tabela `contas`), não existe login
 único nem tenant compartilhado entre elas.
 
-Usuário é **não-programador**. Mesmo requisito do ERP ContFácil: rodar local
-com 1 comando (`python run.py`), sem deploy obrigatório, sem serviços pagos.
+Usuário é **não-programador**. Rodar na VPS é o caminho principal (ver
+"Decisão de rumo" no topo); o `python run.py` continua existindo, mas não é
+mais o foco. Sem serviços pagos além da VPS que já existe.
 
 ## 2. Stack (decisões tomadas — mesmo espírito do ERP ContFácil)
 
@@ -68,7 +68,9 @@ com 1 comando (`python run.py`), sem deploy obrigatório, sem serviços pagos.
   aceitável (mesmo princípio do módulo Procuração do ERP ContFácil, que usa
   PBKDF2 para a senha de acesso; aqui é simétrico porque a senha original
   precisa ser recuperada para autenticar no IMAP/SMTP a cada sincronização).
-- Rodar: `python run.py` → abre navegador em `localhost:8010`.
+- Produção: serviço systemd na VPS atrás do Nginx (`docs/DEPLOY_VPS.md`).
+  Desenvolvimento: `python run.py` → `localhost:8010` (abandonado como
+  rotina; manter só para testes da IA).
 
 ## 3. Modelo de dados
 
@@ -159,6 +161,43 @@ anexos(id, mensagem_id FK, nome_arquivo, content_type, tamanho, caminho_disco)
   sessão do usuário.
 - `.env` nunca vai pro Git (`.gitignore`), mesmo padrão do ERP ContFácil.
 
+- **Senha de acesso** (`app/auth.py`): se `MAIL_CENTER_SENHA_HASH` existe no
+  `.env`, toda rota exige login (cookie assinado HMAC, 12 h, `HttpOnly`;
+  bloqueio de 10 min após 10 falhas). Sem o hash o app roda aberto — só
+  aceitável em `localhost`. **Na VPS é obrigatório** definir via
+  `python -m app.definir_senha` (passo 1.1 do `docs/DEPLOY_VPS.md`).
+
+## 6.1 Módulo Eleições 2026 (`/eleicoes`, `app/eleicoes.py`)
+
+- Aba separada da caixa de e-mail (link "🗳 Eleições 2026" no rodapé da barra
+  lateral). Não depende de nenhuma conta de e-mail cadastrada.
+- Lê a API pública do TSE, sem chave:
+  `https://resultados.tse.jus.br/oficial/ele2026/<eleição>/dados/<uf>/<uf>-c<cargo>-e00<eleição>-u.json`
+  (`br` para Presidente). Eleição `6257` = Presidente; `6259` = Governador
+  (cargo `0003`), Senador (`0005`) e Dep. Federal (`0006`). O sufixo é `-u`;
+  o caminho `dados-simplificados/…-r.json` dá 404 nesta eleição.
+- Cache em memória de 2 min por URL; "Brasil" para Governador/Senador/Dep.
+  Federal baixa os 27 estados em paralelo e soma. Biblioteca padrão
+  (`urllib`), nenhuma dependência nova.
+- Tela: abas de cargo, filtro por UF/partido/votos/%, busca sem acento
+  (nome, número, partido), ordenação por coluna, visão "Por partido" e CSV.
+  Tudo filtrado no navegador; dados do TSE entram via `textContent`, nunca
+  `innerHTML`.
+- **Visão "Blocos"**: soma de votos nominais (sem legenda) dos partidos
+  marcados, com atalhos "Conservadores (PL, Podemos, PRD)", "Direita ampla"
+  e "Esquerda". As listas são **classificação do Alcides/da IA, editável**
+  na tela, não dado do TSE. Patriota não existe mais (fundiu com o PTB em
+  2023 e virou PRD). Seleção lembrada no navegador (localStorage).
+- "%" = percentual sobre os votos válidos do cargo (`pvapn` do TSE). A
+  situação (Eleito, Suplente…) vem do TSE e pode estar vazia até a
+  totalização final — em 05/10/2026 vários estados ainda vinham sem
+  situação de Dep. Federal.
+- Aba **Relatórios** (Relatório 1: Dep. Federal ÷ voto presidencial, blocos e
+  desconto editáveis; endpoint `/eleicoes/relatorio`). Detalhes, números e
+  relatórios: `docs/ELEICOES_2026.md` e `docs/RELATORIO_01_*.md`.
+- Só 1º turno (04/10/2026). Para o 2º turno (25/10) será preciso descobrir
+  os novos códigos de eleição em `comum/config/ele-c.json`.
+
 ## 7. Não fazer
 
 - Não trazer e-mail de Lixeira/Spam pra sincronização automática sem pedido
@@ -176,9 +215,9 @@ anexos(id, mensagem_id FK, nome_arquivo, content_type, tamanho, caminho_disco)
 - Conectar as contas reais (Movbank, Movcont, Clavion) — hoje o projeto
   nasce sem nenhuma conta cadastrada, aguardando as credenciais reais/senhas
   de app de cada uma.
-- Deploy (se decidir tirar do "só local"): ainda não definido — mesma
-  decisão pendente que o roadmap do ERP ContFácil já tem para domínio
-  próprio.
+- **Deploy na VPS (prioridade 1):** blocos 1 a 3 do runbook, já com senha de
+  acesso; depois conectar as contas reais.
+- Depois do deploy: merge do PR #1 e salvar o retrato mobile no Git.
 - Rótulos/etiquetas além das pastas padrão, se a organização por pasta não
   bastar no uso real.
 - Anexar assinatura de e-mail por conta.
@@ -196,3 +235,24 @@ anexos(id, mensagem_id FK, nome_arquivo, content_type, tamanho, caminho_disco)
   (`INICIAR_MAIL_CENTER.command`, mesmo padrão dos outros dois projetos) e
   `docs/DEPLOY_VPS.md` (runbook de deploy, não executado ainda — ver
   callout de pendências no topo deste arquivo).
+- **v0.2** (05/10/2026) — Módulo Eleições 2026 (ver 6.1): Presidente,
+  Governador, Senador e Dep. Federal por voto, % e partido. Testado contra a
+  API real do TSE e no navegador (Playwright); fluxo de e-mail continua sem
+  teste real.
+- **v0.3** (05/10/2026) — Senha de acesso (login por cookie assinado) para
+  poder publicar na VPS com segurança. Testado com TestClient (sem senha →
+  aberto; com senha → 303 para /login; cookie falso, senha errada e
+  bloqueio por tentativas).
+- **v0.4** (05/10/2026) — Rumo redefinido: VPS primeiro, Git depois, local
+  abandonado por enquanto. Documentação (CLAUDE.md, README, runbook)
+  atualizada; nenhum código alterado.
+- **v0.5** (05/10/2026) — Visão "Blocos" no módulo Eleições e no retrato
+  mobile. Dep. Federal, Brasil, 100% apurado: PL + PODE + PRD = 32.206.355
+  votos nominais (28,24% dos válidos). Testado contra a API real.
+- **v0.6** (07/10/2026) — Documentação das eleições (`docs/ELEICOES_2026.md`):
+  API, resultados do 1º turno, blocos e Relatório 1 (0,563 conservadores ×
+  Flávio; 0,517 progressistas × Lula, com desconto de 2%). Sem mudança de
+  código.
+- **v0.7** (07/10/2026) — Aba Relatórios no módulo Eleições (Relatório 1) e
+  tentativas (3x) nas leituras do TSE, que devolvia 403 esporádico. Testado
+  contra a API real. Não publicado na VPS.
