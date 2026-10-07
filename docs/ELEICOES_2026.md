@@ -103,7 +103,9 @@ Republicanos, PP e União têm candidatos fora do campo dele.
 
 - Módulo no Mail Center: aba `/eleicoes` (`app/eleicoes.py`,
   `app/templates/eleicoes.html`) — abas de cargo, filtros, "Por partido",
-  "Blocos", CSV. **Falta portar o "Relatório 1"** para o módulo.
+  "Blocos", CSV, e aba **Relatórios** (Relatório 1, endpoint
+  `/eleicoes/relatorio`). Relatório completo salvo em
+  `docs/RELATORIO_01_DEP_FEDERAL_x_PRESIDENTE.md`.
 - Retrato mobile (Apuração + Blocos + Relatórios, dados embutidos de
   05/10/2026, não atualiza sozinho): artefato privado no claude.ai
   <https://claude.ai/artifact/X5aVkPWE9P7sxTNap3a1dB>. Não está no Git nem na
@@ -112,7 +114,7 @@ Republicanos, PP e União têm candidatos fora do campo dele.
 
 ## 6. Pendências
 
-1. Levar o Relatório 1 para o módulo do Mail Center.
+1. (feito em 07/10) Relatório 1 portado para o módulo.
 2. Confirmar a leitura de "menos 2%".
 3. 2º turno (25/10): achar os novos códigos de eleição em `ele-c.json`.
 4. Publicar na VPS (ver `docs/DEPLOY_VPS.md`); sem VPS, o módulo e o link do

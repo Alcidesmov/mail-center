@@ -38,12 +38,18 @@ def _baixar(url: str) -> dict:
         item = _cache.get(url)
         if item and time.time() - item[0] < TTL_SEGUNDOS:
             return item[1]
-    try:
-        req = urllib.request.Request(url, headers={"User-Agent": "MailCenter/0.2"})
-        with urllib.request.urlopen(req, timeout=30) as resp:
-            dados = json.loads(resp.read().decode("utf-8"))
-    except Exception as exc:
-        raise ErroTSE(f"TSE não respondeu ({url.rsplit('/', 1)[-1]}): {exc}") from exc
+    ultimo_erro = None
+    for tentativa in range(3):  # o TSE devolve 403/5xx esporádico sob carga; 27 UFs em paralelo
+        try:
+            req = urllib.request.Request(url, headers={"User-Agent": "MailCenter/0.2"})
+            with urllib.request.urlopen(req, timeout=30) as resp:
+                dados = json.loads(resp.read().decode("utf-8"))
+            break
+        except Exception as exc:
+            ultimo_erro = exc
+            time.sleep(0.8 * (tentativa + 1))
+    else:
+        raise ErroTSE(f"TSE não respondeu ({url.rsplit('/', 1)[-1]}): {ultimo_erro}") from ultimo_erro
     with _trava:
         _cache[url] = (time.time(), dados)
     return dados
@@ -134,3 +140,29 @@ def resultados(cargo: str, uf: str) -> dict:
         for c in candidatos[:2]:
             c["situacao"] = c["situacao"] or "2º turno"
     return {"candidatos": candidatos, "resumo": resumo, "cargo": cargo, "uf": uf}
+
+
+def relatorio_dep_vs_presidente() -> dict:
+    """Relatório 1: votos nominais por partido (Dep. Federal, Brasil) e votos
+    dos dois presidenciáveis que disputam o 2º turno. Os blocos (quem é
+    "conservador"/"progressista") e o desconto são escolhidos na tela."""
+    pres = resultados("presidente", "BR")
+    dep = resultados("deputado_federal", "TODOS")
+    partidos: dict = {}
+    for c in dep["candidatos"]:
+        partidos[c["partido"]] = partidos.get(c["partido"], 0) + c["votos"]
+
+    def achar(trecho: str):
+        for c in pres["candidatos"]:
+            if trecho in c["nome"].upper():
+                return {"nome": c["nome_urna"], "votos": c["votos"], "partido": c["partido"]}
+        return None
+
+    return {
+        "partidos": partidos,
+        "flavio": achar("BOLSONARO"),
+        "lula": achar("LULA"),
+        "votos_validos_dep": dep["resumo"]["votos_validos"],
+        "atualizado": dep["resumo"]["atualizado"],
+        "secoes_apuradas_pct": min(dep["resumo"]["secoes_apuradas_pct"], pres["resumo"]["secoes_apuradas_pct"]),
+    }

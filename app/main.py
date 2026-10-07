@@ -333,6 +333,14 @@ def eleicoes_dados(cargo: str = "presidente", uf: str = "BR"):
         return JSONResponse({"erro": str(exc)}, status_code=502)
 
 
+@app.get("/eleicoes/relatorio")
+def eleicoes_relatorio():
+    try:
+        return eleicoes.relatorio_dep_vs_presidente()
+    except eleicoes.ErroTSE as exc:
+        return JSONResponse({"erro": str(exc)}, status_code=502)
+
+
 @app.on_event("startup")
 def iniciar():
     db.iniciar_banco()

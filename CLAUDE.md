@@ -192,7 +192,9 @@ anexos(id, mensagem_id FK, nome_arquivo, content_type, tamanho, caminho_disco)
   situação (Eleito, Suplente…) vem do TSE e pode estar vazia até a
   totalização final — em 05/10/2026 vários estados ainda vinham sem
   situação de Dep. Federal.
-- Detalhes, números e relatórios: `docs/ELEICOES_2026.md`.
+- Aba **Relatórios** (Relatório 1: Dep. Federal ÷ voto presidencial, blocos e
+  desconto editáveis; endpoint `/eleicoes/relatorio`). Detalhes, números e
+  relatórios: `docs/ELEICOES_2026.md` e `docs/RELATORIO_01_*.md`.
 - Só 1º turno (04/10/2026). Para o 2º turno (25/10) será preciso descobrir
   os novos códigos de eleição em `comum/config/ele-c.json`.
 
@@ -251,3 +253,6 @@ anexos(id, mensagem_id FK, nome_arquivo, content_type, tamanho, caminho_disco)
   API, resultados do 1º turno, blocos e Relatório 1 (0,563 conservadores ×
   Flávio; 0,517 progressistas × Lula, com desconto de 2%). Sem mudança de
   código.
+- **v0.7** (07/10/2026) — Aba Relatórios no módulo Eleições (Relatório 1) e
+  tentativas (3x) nas leituras do TSE, que devolvia 403 esporádico. Testado
+  contra a API real. Não publicado na VPS.
