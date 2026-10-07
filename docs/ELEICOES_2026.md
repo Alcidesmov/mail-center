@@ -84,7 +84,7 @@ válidos do cargo: 114.059.101. Principais partidos:
 - **Direita ampla (sugestão da IA):** + Republicanos, PP, União, Novo, Missão,
   DC = 59.326.635 (52,01%).
 - **Progressistas (sugestão da IA):** PT, PSOL, PSB, PDT, PCdoB, PV, Rede,
-  PSTU, UP, PCO = 28.442.116.
+  PSTU, UP, PCO = 28.441.344.
 
 **Relatório 1 — Deputados federais ÷ voto presidencial**
 (votos do bloco × 0,98) ÷ votos do candidato do campo. "Menos 2%" foi
@@ -94,7 +94,9 @@ adotada: 2 pontos percentuais dos votos válidos — confirmar com o Alcides).
 | Bloco | Votos dep. fed. | − 2% | Candidato | Razão |
 |---|---|---|---|---|
 | Conservadores (PL, PODE, PRD) | 32.206.355 | 31.562.228 | Flávio: 56.104.503 | **0,563** (sem desconto 0,574) |
-| Progressistas | 28.442.116 | 27.873.274 | Lula: 53.879.538 | **0,517** (sem desconto 0,528) |
+| Progressistas | 28.441.344 | 27.872.517 | Lula: 53.879.538 | **0,517** (sem desconto 0,528) |
+
+> Totais do bloco progressista atualizados em 07/10 (PSB mudou entre leituras do TSE).
 
 "Direita ampla" ÷ Flávio dá 1,036 — **não usar como "votos de Flávio"**:
 Republicanos, PP e União têm candidatos fora do campo dele.
