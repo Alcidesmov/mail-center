@@ -31,8 +31,10 @@ Estado atual:
    Alcides ainda não gerou). Fazer merge do PR #1 quando ele aprovar.
 6. Subdomínio sugerido (não confirmado nem criado):
    `mail.srv1697060.hstgr.cloud`.
-7. Retrato mobile dos resultados (artefato privado no claude.ai, 05/10/2026)
-   aguarda o Alcides gostar para ser salvo em `docs/apuracao_mobile.html`.
+7. Eleições: dados, API do TSE, resultados e o "Relatório 1" estão em
+   `docs/ELEICOES_2026.md`. O retrato mobile (artefato privado no claude.ai)
+   ainda não está no Git; salvar em `docs/apuracao_mobile.html` só se o
+   Alcides pedir.
 
 ## 1. Contexto
 
@@ -190,6 +192,7 @@ anexos(id, mensagem_id FK, nome_arquivo, content_type, tamanho, caminho_disco)
   situação (Eleito, Suplente…) vem do TSE e pode estar vazia até a
   totalização final — em 05/10/2026 vários estados ainda vinham sem
   situação de Dep. Federal.
+- Detalhes, números e relatórios: `docs/ELEICOES_2026.md`.
 - Só 1º turno (04/10/2026). Para o 2º turno (25/10) será preciso descobrir
   os novos códigos de eleição em `comum/config/ele-c.json`.
 
@@ -244,3 +247,7 @@ anexos(id, mensagem_id FK, nome_arquivo, content_type, tamanho, caminho_disco)
 - **v0.5** (05/10/2026) — Visão "Blocos" no módulo Eleições e no retrato
   mobile. Dep. Federal, Brasil, 100% apurado: PL + PODE + PRD = 32.206.355
   votos nominais (28,24% dos válidos). Testado contra a API real.
+- **v0.6** (07/10/2026) — Documentação das eleições (`docs/ELEICOES_2026.md`):
+  API, resultados do 1º turno, blocos e Relatório 1 (0,563 conservadores ×
+  Flávio; 0,517 progressistas × Lula, com desconto de 2%). Sem mudança de
+  código.
