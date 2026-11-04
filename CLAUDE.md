@@ -196,8 +196,16 @@ anexos(id, mensagem_id FK, nome_arquivo, content_type, tamanho, caminho_disco)
   desconto editáveis; endpoint `/eleicoes/relatorio`). Detalhes, números e
   relatórios: `docs/ELEICOES_2026.md` e `docs/RELATORIO_01_*.md`.
 - 1º turno (eleição `6257`/`6259`) e 2º turno de Presidente (eleição `6258`,
-  25/10/2026). O módulo ainda só lê o 1º turno; o mapa do 2º turno existe só
-  como artefato (ver `docs/ELEICOES_2026.md`, seção 7).
+  25/10/2026). As abas de cargo leem o 1º turno.
+- **Mapa do 2º turno** (`/eleicoes/mapa-2turno`, link na barra de abas): mapa por
+  estado de Lula e de Flávio (% dos válidos), mapa "Vencedor" (margem em pp),
+  ranking, detalhe ao passar o mouse e tabela. Lê os 27 arquivos de UF + `br` +
+  `zz` (exterior) ao vivo (`eleicoes.mapa_turno2()`), confere número e nome dos
+  candidatos (13 = Lula, 22 = Flávio) e **confere que UFs + exterior fecham com o
+  total do Brasil**; se não fechar, a página mostra um aviso. Arquivos:
+  `app/dados/mapa_turno2.html` (página; `__DATA__` é trocado pelos dados) e
+  `app/dados/br_estados_geo.json` (limites simplificados, via `click_that_hood`/IBGE).
+  Mesma página existe como artefato privado (dados embutidos de 25/10).
 
 ## 7. Não fazer
 
@@ -259,3 +267,6 @@ anexos(id, mensagem_id FK, nome_arquivo, content_type, tamanho, caminho_disco)
   contra a API real. Não publicado na VPS.
 - **v0.8** (04/11/2026) — Documentado o 2º turno (Presidente, eleição `6258`) e o
   mapa por estado (artefato). Sem mudança de código.
+- **v0.9** (04/11/2026) — Mapa do 2º turno dentro do módulo Eleições (dados ao
+  vivo do TSE, conferência de totais). Testado contra a API real e no navegador
+  (login, abas, clique, tabela). Não publicado na VPS.

@@ -10,6 +10,7 @@ import threading
 import time
 import urllib.request
 from concurrent.futures import ThreadPoolExecutor
+from pathlib import Path
 
 BASE = "https://resultados.tse.jus.br/oficial/ele2026"
 TTL_SEGUNDOS = 120  # apuração pode ser republicada; 2 min evita martelar o TSE
@@ -166,3 +167,72 @@ def relatorio_dep_vs_presidente() -> dict:
         "atualizado": dep["resumo"]["atualizado"],
         "secoes_apuradas_pct": min(dep["resumo"]["secoes_apuradas_pct"], pres["resumo"]["secoes_apuradas_pct"]),
     }
+
+
+# --------------------------------------------------------------------------
+# Mapa do 2º turno (Presidente) — eleição 6258, 25/10/2026
+# --------------------------------------------------------------------------
+
+ELEICAO_PRES_2T = "6258"
+_DADOS = Path(__file__).resolve().parent / "dados"
+
+
+def _url_2t(chave: str) -> str:
+    c = chave.lower()  # uf em minúsculo, "br" ou "zz" (exterior)
+    return f"{BASE}/{ELEICAO_PRES_2T}/dados/{c}/{c}-c0001-e00{ELEICAO_PRES_2T}-u.json"
+
+
+def _ler_2t(dados: dict, chave: str) -> dict:
+    """Lula (13) e Flávio Bolsonaro (22) num arquivo de 2º turno. Confere
+    número e nome para nunca trocar os candidatos."""
+    nomes, votos = {}, {}
+    for agr in dados["carg"][0].get("agr", []):
+        for par in agr.get("par", []):
+            for c in par.get("cand", []):
+                votos[c["n"]] = int(c.get("vap") or 0)
+                nomes[c["n"]] = c.get("nm", "").upper()
+    if set(votos) != {"13", "22"} or "LULA" not in nomes["13"] or "BOLSONARO" not in nomes["22"]:
+        raise ErroTSE(f"Candidatos inesperados no arquivo de {chave}: {nomes}")
+    v, e, s = dados.get("v", {}), dados.get("e", {}), dados.get("s", {})
+    return {
+        "lula": votos["13"], "flavio": votos["22"],
+        "brancos": int(v.get("vb") or 0), "nulos": int(v.get("tvn") or 0),
+        "compar": int(e.get("c") or 0), "eleitorado": int(e.get("te") or 0),
+        "comparecimento_pct": _num(e.get("pcn") or e.get("pc")),
+        "secoes_pct": _num(s.get("pst")), "hora": dados.get("ht", ""), "data": dados.get("dt", ""),
+    }
+
+
+def mapa_turno2() -> dict:
+    """Votos de Lula e Flávio por UF + Brasil + exterior, e a conferência de
+    que UFs + exterior fecham com o total do Brasil."""
+    geo = json.loads((_DADOS / "br_estados_geo.json").read_text(encoding="utf-8"))
+    chaves = UFS + ["BR", "ZZ"]
+    with ThreadPoolExecutor(max_workers=6) as pool:
+        lidos = dict(zip(chaves, pool.map(lambda k: _ler_2t(_baixar(_url_2t(k)), k), chaves)))
+    br, zz = lidos["BR"], lidos["ZZ"]
+    res = {u: {k: lidos[u][k] for k in ("lula", "flavio", "brancos", "nulos", "compar", "eleitorado")} for u in UFS}
+    soma_l = sum(res[u]["lula"] for u in UFS) + zz["lula"]
+    soma_f = sum(res[u]["flavio"] for u in UFS) + zz["flavio"]
+    dif_l, dif_f = br["lula"] - soma_l, br["flavio"] - soma_f
+    return {
+        "geo": geo,
+        "res": res,
+        "br": {
+            "lula": br["lula"], "flavio": br["flavio"], "brancos": br["brancos"], "nulos": br["nulos"],
+            "compar": br["compar"], "comparecimento_pct": br["comparecimento_pct"],
+            "secoes_pct": min(x["secoes_pct"] for x in lidos.values()),
+            "hora": br["hora"], "data": br["data"],
+        },
+        "ext": {"lula": zz["lula"], "flavio": zz["flavio"]},
+        "verificacao": {"ok": dif_l == 0 and dif_f == 0, "dif_lula": dif_l, "dif_flavio": dif_f},
+    }
+
+
+def pagina_mapa_turno2() -> str:
+    """Página completa (HTML) do mapa, com os dados de agora embutidos."""
+    dados = json.dumps(mapa_turno2(), ensure_ascii=False, separators=(",", ":")).replace("</", "<\\/")
+    miolo = (_DADOS / "mapa_turno2.html").read_text(encoding="utf-8").replace("__DATA__", dados)
+    return ('<!doctype html><html lang="pt-BR"><head><meta charset="utf-8">'
+            '<meta name="viewport" content="width=device-width, initial-scale=1"></head>'
+            '<body style="margin:0">' + miolo + "</body></html>")

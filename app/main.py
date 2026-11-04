@@ -1,10 +1,11 @@
+import html
 import json
 import threading
 import time
 from pathlib import Path
 
 from fastapi import FastAPI, Form, Request, UploadFile
-from fastapi.responses import FileResponse, JSONResponse, RedirectResponse
+from fastapi.responses import FileResponse, HTMLResponse, JSONResponse, RedirectResponse
 from starlette.datastructures import FormData
 
 from app import auth, db, eleicoes, imap_sync, smtp_send
@@ -331,6 +332,14 @@ def eleicoes_dados(cargo: str = "presidente", uf: str = "BR"):
         return eleicoes.resultados(cargo, uf)
     except eleicoes.ErroTSE as exc:
         return JSONResponse({"erro": str(exc)}, status_code=502)
+
+
+@app.get("/eleicoes/mapa-2turno")
+def eleicoes_mapa_turno2():
+    try:
+        return HTMLResponse(eleicoes.pagina_mapa_turno2())
+    except eleicoes.ErroTSE as exc:
+        return HTMLResponse("<p>Não consegui ler o TSE agora: " + html.escape(str(exc)) + "</p>", status_code=502)
 
 
 @app.get("/eleicoes/relatorio")

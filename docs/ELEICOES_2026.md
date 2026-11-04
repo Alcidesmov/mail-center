@@ -131,12 +131,13 @@ Republicanos, PP e União têm candidatos fora do campo dele.
   "Vencedor" (margem em pp), com ranking e tabela:
   <https://claude.ai/artifact/Di3tsCie3fzhrVjLFQb2Fe>. Limites dos estados: IBGE via
   `click_that_hood` (`brazil-states.geojson`), simplificados; o IBGE direto recusou a conexão
-  do ambiente. Não está no Git nem na VPS.
+  do ambiente. No módulo do Mail Center: `/eleicoes/mapa-2turno`, com dados ao vivo e conferência de totais
+  (código em `app/eleicoes.py::mapa_turno2`). Ainda não publicado na VPS.
 
 ## 6. Pendências
 
 1. (feito em 07/10) Relatório 1 portado para o módulo.
 2. Confirmar a leitura de "menos 2%".
-3. (feito em 04/11) 2º turno: código `6258`, ver seção 7. Falta portar o mapa ao módulo.
+3. (feito em 04/11) 2º turno: código `6258`, ver seção 7. Mapa já está no módulo: `/eleicoes/mapa-2turno`.
 4. Publicar na VPS (ver `docs/DEPLOY_VPS.md`); sem VPS, o módulo e o link do
    artefato são as únicas formas de ver isso.
