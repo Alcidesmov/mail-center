@@ -1,0 +1,278 @@
+<title>Mapa do 2º Turno 2026</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<style>
+/* Layout: faixa de resultado no topo, mapa à esquerda e painel (detalhe + ranking) à direita; empilha no celular. Azul = Flávio, vermelho = Lula (par divergente validado). */
+:root{
+  --bg:#f9f9f7; --surface:#fcfcfb; --ink:#0b0b0b; --ink2:#52514e; --muted:#898781; --grid:#e1e0d9; --axis:#c3c2b7;
+  --lula:#c74845; --flavio:#2a78d6; --neutral:#f0efec;
+  --f1:#cde2fb; --f2:#9ec5f4; --f3:#6da7ec; --f4:#2a78d6; --f5:#1c5cab; --f6:#0d366b;
+  --l1:#fad6d2; --l2:#f1aea8; --l3:#e4857e; --l4:#c74845; --l5:#9e3432; --l6:#621b1a;
+  --dl1:#f1aea8; --dl2:#e4857e; --dl3:#c74845; --dl4:#892b2a;
+  --df1:#9ec5f4; --df2:#6da7ec; --df3:#2a78d6; --df4:#184f95;
+  --font:system-ui,-apple-system,"Segoe UI",sans-serif;
+}
+@media (prefers-color-scheme: dark){:root:not([data-theme="light"]){
+  --bg:#0d0d0d; --surface:#1a1a19; --ink:#f0efec; --ink2:#c3c2b7; --muted:#898781; --grid:#2c2c2a; --axis:#383835;
+  --lula:#e66767; --flavio:#3987e5; --neutral:#383835;
+  --f1:#104281; --f2:#1c5cab; --f3:#2a78d6; --f4:#5598e7; --f5:#86b6ef; --f6:#b7d3f6;
+  --l1:#762221; --l2:#9e3432; --l3:#c74845; --l4:#dd716a; --l5:#ea9a93; --l6:#f4c2be;
+  --dl1:#9e3432; --dl2:#c74845; --dl3:#dd716a; --dl4:#ea9a93;
+  --df1:#1c5cab; --df2:#2a78d6; --df3:#5598e7; --df4:#86b6ef; color-scheme:dark}}
+:root[data-theme="dark"]{
+  --bg:#0d0d0d; --surface:#1a1a19; --ink:#f0efec; --ink2:#c3c2b7; --muted:#898781; --grid:#2c2c2a; --axis:#383835;
+  --lula:#e66767; --flavio:#3987e5; --neutral:#383835;
+  --f1:#104281; --f2:#1c5cab; --f3:#2a78d6; --f4:#5598e7; --f5:#86b6ef; --f6:#b7d3f6;
+  --l1:#762221; --l2:#9e3432; --l3:#c74845; --l4:#dd716a; --l5:#ea9a93; --l6:#f4c2be;
+  --dl1:#9e3432; --dl2:#c74845; --dl3:#dd716a; --dl4:#ea9a93;
+  --df1:#1c5cab; --df2:#2a78d6; --df3:#5598e7; --df4:#86b6ef; color-scheme:dark}
+*{box-sizing:border-box}
+body{background:var(--bg);color:var(--ink);font-family:var(--font);font-size:15px;line-height:1.4;
+  padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px));padding-block:20px 40px}
+.wrap{max-width:1120px;margin-inline:auto}
+.eyebrow{font-size:12px;letter-spacing:.08em;text-transform:uppercase;color:var(--ink2);font-weight:600}
+h1{font-size:clamp(28px,5vw,44px);line-height:1.05;margin:6px 0 0;font-weight:800;letter-spacing:-.02em;text-wrap:balance}
+.placar{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-top:18px}
+.cand{background:var(--surface);border:1px solid var(--grid);border-radius:12px;padding:14px 16px;min-width:0}
+.cand .nome{display:flex;align-items:center;gap:8px;font-weight:700}
+.cand .dot{width:12px;height:12px;border-radius:3px;flex:none}
+.cand .pct{font-size:clamp(30px,6vw,46px);font-weight:800;letter-spacing:-.02em;line-height:1.05;margin-top:6px;font-variant-numeric:tabular-nums}
+.cand .votos{color:var(--ink2);font-variant-numeric:tabular-nums;margin-top:2px}
+.pill{display:inline-block;font-size:12px;font-weight:700;padding:2px 8px;border:1px solid currentColor;border-radius:999px;margin-left:auto}
+.cand.lula .dot{background:var(--lula)} .cand.flavio .dot{background:var(--flavio)}
+.resumo{color:var(--ink2);font-size:13.5px;margin-top:10px}
+.barra{display:flex;height:10px;border-radius:5px;overflow:hidden;margin-top:12px;gap:2px;background:var(--surface)}
+.barra i{display:block;height:100%} .barra .l{background:var(--lula)} .barra .f{background:var(--flavio)}
+.controles{display:flex;flex-wrap:wrap;gap:10px;align-items:center;margin-top:22px}
+.seg{display:inline-flex;border:1px solid var(--axis);border-radius:10px;overflow:hidden;background:var(--surface)}
+.seg button{font:600 14px var(--font);padding:9px 14px;border:0;background:transparent;color:var(--ink2);cursor:pointer}
+.seg button[aria-pressed="true"]{background:var(--ink);color:var(--bg)}
+.link{font:600 14px var(--font);background:none;border:0;color:var(--ink);text-decoration:underline;cursor:pointer;padding:8px 4px}
+:focus-visible{outline:2px solid var(--ink);outline-offset:2px}
+.grid{display:grid;grid-template-columns:1fr;gap:18px;margin-top:14px}
+@media (min-width:900px){.grid{grid-template-columns:1.12fr .88fr;align-items:start}}
+.mapbox{background:var(--surface);border:1px solid var(--grid);border-radius:12px;padding:10px;min-width:0}
+.mapbox h2,.painel h2{font-size:15px;margin:2px 4px 6px;font-weight:700}
+svg{display:block;width:100%;height:auto}
+.uf path{stroke:var(--surface);stroke-width:1.1;stroke-linejoin:round;cursor:pointer;transition:opacity .12s}
+.uf.sel path,.uf.hov path{stroke:var(--ink);stroke-width:2.2}
+.rot{font:700 12.5px var(--font);pointer-events:none}
+.oc text{font:700 12.5px var(--font);fill:var(--ink)} .oc line{stroke:var(--muted);stroke-width:.8}
+.legenda{display:flex;flex-wrap:wrap;gap:4px 14px;margin:8px 4px 2px;font-size:12.5px;color:var(--ink2)}
+.legenda .t{width:100%;font-weight:600;color:var(--ink)}
+.legenda span.i{display:inline-flex;align-items:center;gap:6px}
+.legenda b{display:inline-block;width:18px;height:12px;border-radius:2px;border:1px solid var(--grid)}
+.painel{display:flex;flex-direction:column;gap:14px;min-width:0}
+.card{background:var(--surface);border:1px solid var(--grid);border-radius:12px;padding:14px 16px}
+.card h2{margin:0 0 8px;font-size:18px}
+.linha{display:grid;grid-template-columns:auto 1fr auto;gap:2px 10px;align-items:baseline;padding:6px 0;border-top:1px solid var(--grid)}
+.linha:first-of-type{border-top:0}
+.linha .dot{width:10px;height:10px;border-radius:2px;align-self:center}
+.linha .v{font-variant-numeric:tabular-nums;text-align:right;font-weight:700}
+.linha .s{grid-column:2/4;color:var(--ink2);font-size:13px;font-variant-numeric:tabular-nums}
+.nota{color:var(--ink2);font-size:13px;margin-top:8px}
+.rank{list-style:none;margin:0;padding:0;display:flex;flex-direction:column;gap:3px;max-height:520px;overflow:auto}
+.rank li{display:grid;grid-template-columns:2.4em 1fr 5.2em;gap:8px;align-items:center;padding:3px 4px;border-radius:6px;cursor:pointer}
+.rank li.hov,.rank li.sel{background:var(--neutral)}
+.rank .u{font-weight:700;font-size:13px}
+.rank .tr{position:relative;height:12px;background:var(--grid);border-radius:3px}
+.rank .tr i{position:absolute;top:0;bottom:0;border-radius:3px}
+.rank .tr .m{position:absolute;left:50%;top:-2px;bottom:-2px;width:1px;background:var(--ink2)}
+.rank .n{font-size:13px;text-align:right;font-variant-numeric:tabular-nums}
+.tabela{margin-top:18px;overflow-x:auto;background:var(--surface);border:1px solid var(--grid);border-radius:12px}
+table{border-collapse:collapse;width:100%;font-size:13.5px;min-width:640px}
+th,td{padding:7px 10px;text-align:right;border-top:1px solid var(--grid);white-space:nowrap}
+th:first-child,td:first-child,th:nth-child(2),td:nth-child(2){text-align:left}
+thead th{border-top:0;color:var(--ink2);font-weight:600;cursor:pointer;position:sticky;top:0;background:var(--surface)}
+tbody td{font-variant-numeric:tabular-nums}
+tr.tot td{font-weight:700}
+.fonte{margin-top:18px;color:var(--ink2);font-size:12.5px;max-width:78ch}
+@media (max-width:420px){.placar{grid-template-columns:1fr}}
+@media (max-width:640px){.rot,.oc text{font-size:15px}}
+@media (prefers-reduced-motion:reduce){.uf path{transition:none}}
+</style>
+
+<div class="wrap">
+  <a class="link" href="/eleicoes" style="padding-left:0">← Eleições</a>
+  <div class="eyebrow">2º turno · 25/10/2026</div>
+  <h1>Mapa do segundo turno por estado</h1>
+  <div class="placar">
+    <div class="cand lula"><div class="nome"><span class="dot"></span>Lula <span class="pill" style="color:var(--ink2)">Eleito</span></div><div class="pct" id="plp"></div><div class="votos" id="plv"></div></div>
+    <div class="cand flavio"><div class="nome"><span class="dot"></span>Flávio Bolsonaro</div><div class="pct" id="pfp"></div><div class="votos" id="pfv"></div></div>
+  </div>
+  <div class="barra" aria-hidden="true"><i class="l" id="bl"></i><i class="f" id="bf"></i></div>
+  <div class="resumo" id="resumo"></div>
+
+  <div class="controles">
+    <div class="seg" role="group" aria-label="Mapa">
+      <button id="vLula" aria-pressed="true">Lula</button><button id="vFlavio" aria-pressed="false">Flávio</button><button id="vVenc" aria-pressed="false">Vencedor</button>
+    </div>
+    <button class="link" id="btnTab" aria-expanded="false">Ver tabela completa</button>
+  </div>
+
+  <div class="grid">
+    <div class="mapbox"><h2 id="tituloMapa"></h2><div id="mapa"></div><div class="legenda" id="legenda"></div></div>
+    <div class="painel">
+      <div class="card" id="detalhe" aria-live="polite"></div>
+      <div class="card"><h2 id="tituloRank" style="font-size:15px"></h2><ol class="rank" id="rank"></ol></div>
+    </div>
+  </div>
+
+  <div class="tabela" id="tabela" hidden><table><thead><tr id="cab"></tr></thead><tbody id="corpo"></tbody></table></div>
+  <p class="fonte" id="fonte"></p>
+</div>
+
+<script id="dados" type="application/json">__DATA__</script>
+<script>
+(function(){
+const D=JSON.parse(document.getElementById('dados').textContent);
+const $=id=>document.getElementById(id);
+const nI=v=>Number(v).toLocaleString('pt-BR');
+const nP=v=>Number(v).toLocaleString('pt-BR',{minimumFractionDigits:2,maximumFractionDigits:2})+'%';
+const nM=v=>(v>0?'+':v<0?'−':'')+Math.abs(v).toLocaleString('pt-BR',{minimumFractionDigits:1,maximumFractionDigits:1})+' pp';
+function el(t,c,x){const e=document.createElement(t);if(c)e.className=c;if(x!==undefined)e.textContent=x;return e}
+const NS='http://www.w3.org/2000/svg';
+function sv(t,a){const e=document.createElementNS(NS,t);for(const k in a)e.setAttribute(k,a[k]);return e}
+
+const UFS=Object.keys(D.geo.uf);
+const rows=UFS.map(uf=>{const r=D.res[uf],v=r.lula+r.flavio;return {uf,nome:D.geo.uf[uf].nome,lula:r.lula,flavio:r.flavio,validos:v,lp:100*r.lula/v,fp:100*r.flavio/v,
+  m:100*(r.lula-r.flavio)/v,brancos:r.brancos,nulos:r.nulos,compar:r.compar,eleit:r.eleitorado,cp:100*r.compar/r.eleitorado}});
+const byUf={};rows.forEach(r=>byUf[r.uf]=r);
+const nL=rows.filter(r=>r.m>0).length,nF=rows.filter(r=>r.m<0).length;
+
+// --- topo
+const B=D.br,vb=B.lula+B.flavio;
+$('plp').textContent=nP(100*B.lula/vb);$('plv').textContent=nI(B.lula)+' votos';
+$('pfp').textContent=nP(100*B.flavio/vb);$('pfv').textContent=nI(B.flavio)+' votos';
+$('bl').style.width=(100*B.lula/vb)+'%';$('bf').style.width=(100*B.flavio/vb)+'%';
+$('resumo').textContent='Lula venceu em '+nL+' estados e Flávio em '+nF+' (o DF conta como estado). Diferença nacional: '+nI(B.lula-B.flavio)+' votos. Comparecimento '+nP(B.comparecimento_pct)+', '+nP(B.secoes_pct)+' das seções apuradas.';
+
+// --- escalas
+const SEQ=[30,40,50,60,70],SEQL=['menos de 30%','30 a 40%','40 a 50%','50 a 60%','60 a 70%','70% ou mais'];
+const DIV=[2,10,20,35],DIVL=['2 a 10 pp','10 a 20 pp','20 a 35 pp','35 pp ou mais'];
+const seqIdx=v=>SEQ.filter(e=>v>=e).length;
+const divIdx=m=>{const a=Math.abs(m);return a<DIV[0]?-1:DIV.filter(e=>a>=e).length-1};
+function cor(view,r){
+  if(view==='lula')return 'var(--l'+(seqIdx(r.lp)+1)+')';
+  if(view==='flavio')return 'var(--f'+(seqIdx(r.fp)+1)+')';
+  const i=divIdx(r.m);return i<0?'var(--neutral)':(r.m>0?'var(--dl':'var(--df')+(i+1)+')';
+}
+// cor do texto sobre o preenchimento (luminância do valor resolvido)
+function lum(c){const m=c.match(/#([0-9a-f]{6})/i);if(!m)return 1;const n=parseInt(m[1],16),f=x=>{x/=255;return x<=.03928?x/12.92:Math.pow((x+.055)/1.055,2.4)};return .2126*f(n>>16)+.7152*f((n>>8)&255)+.0722*f(n&255)}
+
+// --- mapa
+const G=D.geo;let view='lula',sel=null,hov=null;
+try{const g=localStorage.getItem('mapa2t_view');if(g==='lula'||g==='flavio'||g==='vencedor')view=g}catch(e){}
+const svg=sv('svg',{viewBox:'0 0 '+G.W+' '+G.H,role:'group','aria-label':'Mapa do Brasil por estado'});
+const gp=sv('g',{}),gl=sv('g',{}),go=sv('g',{class:'oc'});
+svg.append(gp,go,gl);
+const OCEAN=['RN','PB','PE','AL','SE'].sort((a,b)=>G.uf[a].cy-G.uf[b].cy);
+let ly=-1e9;const oy={};OCEAN.forEach(u=>{ly=Math.max(G.uf[u].cy,ly+15);oy[u]=ly});
+const gs={},ps={},ts={},sw={};
+UFS.forEach(uf=>{
+  const g=sv('g',{class:'uf',tabindex:'0',role:'button'}),p=sv('path',{d:G.uf[uf].d});g.append(p);gp.append(g);gs[uf]=g;ps[uf]=p;
+  g.addEventListener('mouseenter',()=>setHov(uf));g.addEventListener('mouseleave',()=>setHov(null));
+  g.addEventListener('focus',()=>setHov(uf));g.addEventListener('blur',()=>setHov(null));
+  g.addEventListener('click',()=>setSel(uf));g.addEventListener('keydown',e=>{if(e.key==='Enter'||e.key===' '){e.preventDefault();setSel(uf)}});
+  if(OCEAN.includes(uf)){
+    const x=G.maxx+10,y=oy[uf];
+    go.append(sv('line',{x1:G.uf[uf].cx,y1:G.uf[uf].cy,x2:x-2,y2:y}));
+    const s=sv('rect',{x:x,y:y-5.5,width:11,height:11,rx:2,class:'sw'});go.append(s);sw[uf]=s;
+    const t=sv('text',{x:x+15,y:y+4.5});t.textContent=uf;go.append(t);
+  }else{
+    const t=sv('text',{x:G.uf[uf].cx,y:G.uf[uf].cy+4,'text-anchor':'middle',class:'rot'});t.textContent=uf;gl.append(t);ts[uf]=t;
+  }
+});
+$('mapa').append(svg);
+
+function pintar(){
+  const cs=getComputedStyle(document.documentElement);
+  UFS.forEach(uf=>{
+    const c=cor(view,byUf[uf]);ps[uf].style.fill=c;
+    const m=c.match(/var\((--[a-z0-9]+)\)/),hex=m?cs.getPropertyValue(m[1]).trim():c;
+    if(ts[uf])ts[uf].style.fill=lum(hex)>0.42?'#0b0b0b':'#ffffff';
+    if(sw[uf]){sw[uf].style.fill=c;sw[uf].style.stroke='var(--axis)'}
+    const r=byUf[uf];gs[uf].setAttribute('aria-label',r.nome+': Lula '+nP(r.lp)+', Flávio '+nP(r.fp));
+  });
+}
+function legenda(){
+  const L=$('legenda');L.replaceChildren();
+  const item=(c,t)=>{const s=el('span','i');const b=el('b');b.style.background=c;s.append(b,t);L.append(s)};
+  if(view==='vencedor'){
+    L.append(el('div','t','Margem entre os dois, em pontos percentuais (pp)'));
+    for(let i=3;i>=0;i--)item('var(--df'+(i+1)+')','Flávio '+DIVL[i]);
+    item('var(--neutral)','menos de 2 pp');
+    for(let i=0;i<4;i++)item('var(--dl'+(i+1)+')','Lula '+DIVL[i]);
+  }else{
+    L.append(el('div','t','% dos votos válidos de '+(view==='lula'?'Lula':'Flávio Bolsonaro')+' no estado'));
+    for(let i=0;i<6;i++)item('var(--'+(view==='lula'?'l':'f')+(i+1)+')',SEQL[i]);
+  }
+}
+// --- detalhe
+function detalhe(uf){
+  const C=$('detalhe');C.replaceChildren();
+  let r;
+  if(!uf){r={nome:'Brasil',lula:B.lula,flavio:B.flavio,validos:vb,lp:100*B.lula/vb,fp:100*B.flavio/vb,m:100*(B.lula-B.flavio)/vb,brancos:B.brancos,nulos:B.nulos,compar:B.compar,cp:B.comparecimento_pct}}
+  else r=byUf[uf];
+  C.append(el('h2','',r.nome+(uf?' ('+uf+')':'')));
+  [['Lula','--lula',r.lula,r.lp],['Flávio Bolsonaro','--flavio',r.flavio,r.fp]].forEach(([n,v,vt,p])=>{
+    const l=el('div','linha'),d=el('span','dot');d.style.background='var('+v+')';
+    l.append(d,el('span','',n),el('span','v',nP(p)),el('span','s',nI(vt)+' votos'));C.append(l)});
+  C.append(el('div','nota',(r.m>0?'Lula à frente por ':'Flávio à frente por ')+nM(Math.abs(r.m)).replace('+','')+' ('+nI(Math.abs(r.lula-r.flavio))+' votos). Comparecimento '+nP(r.cp)+'. Brancos '+nI(r.brancos)+' · nulos '+nI(r.nulos)+'.'));
+  if(!uf)C.append(el('div','nota','Toque ou passe o mouse sobre um estado para ver os números dele.'));
+}
+// --- ranking
+function ranking(){
+  const R=$('rank');R.replaceChildren();
+  let lista,t;
+  if(view==='lula'){lista=[...rows].sort((a,b)=>b.lp-a.lp);t='Lula: % dos votos válidos, por estado'}
+  else if(view==='flavio'){lista=[...rows].sort((a,b)=>b.fp-a.fp);t='Flávio: % dos votos válidos, por estado'}
+  else{lista=[...rows].sort((a,b)=>b.m-a.m);t='Margem por estado (vermelho = Lula, azul = Flávio)'}
+  $('tituloRank').textContent=t;
+  lista.forEach(r=>{
+    const li=el('li');li.dataset.uf=r.uf;li.append(el('span','u',r.uf));
+    const tr=el('div','tr'),b=el('i');
+    if(view==='vencedor'){const w=Math.min(50,Math.abs(r.m)/52*50);b.style.width=w+'%';b.style.background=r.m>0?'var(--lula)':'var(--flavio)';if(r.m>0)b.style.left='50%';else b.style.right='50%';tr.append(b,el('span','m'))}
+    else{const v=view==='lula'?r.lp:r.fp;b.style.left='0';b.style.width=v+'%';b.style.background=view==='lula'?'var(--lula)':'var(--flavio)';tr.append(b,el('span','m'))}
+    li.append(tr,el('span','n',view==='vencedor'?nM(r.m):nP(view==='lula'?r.lp:r.fp)));
+    li.addEventListener('mouseenter',()=>setHov(r.uf));li.addEventListener('mouseleave',()=>setHov(null));li.addEventListener('click',()=>setSel(r.uf));
+    R.append(li);
+  });
+  marcar();
+}
+function marcar(){
+  UFS.forEach(u=>{gs[u].classList.toggle('sel',u===sel);gs[u].classList.toggle('hov',u===hov)});
+  document.querySelectorAll('#rank li').forEach(li=>{li.classList.toggle('sel',li.dataset.uf===sel);li.classList.toggle('hov',li.dataset.uf===hov)});
+  if(hov)gp.append(gs[hov]);else if(sel)gp.append(gs[sel]);
+  detalhe(hov||sel);
+}
+function setHov(u){hov=u;marcar()}
+function setSel(u){sel=(sel===u?null:u);marcar()}
+function titulo(){$('tituloMapa').textContent=view==='lula'?'Votos em Lula por estado':view==='flavio'?'Votos em Flávio Bolsonaro por estado':'Quem venceu em cada estado'}
+function setView(v){view=v;try{localStorage.setItem('mapa2t_view',v)}catch(e){}
+  $('vLula').setAttribute('aria-pressed',String(v==='lula'));$('vFlavio').setAttribute('aria-pressed',String(v==='flavio'));$('vVenc').setAttribute('aria-pressed',String(v==='vencedor'));
+  titulo();pintar();legenda();ranking()}
+$('vLula').onclick=()=>setView('lula');$('vFlavio').onclick=()=>setView('flavio');$('vVenc').onclick=()=>setView('vencedor');
+
+// --- tabela
+let ord={k:'nome',asc:true};
+const COLS=[['nome','Estado'],['uf','UF'],['lula','Lula (votos)'],['lp','Lula %'],['flavio','Flávio (votos)'],['fp','Flávio %'],['m','Margem'],['v','Venceu']];
+function tabela(){
+  const cab=$('cab');cab.replaceChildren();
+  COLS.forEach(([k,n])=>{const th=el('th','',n+(ord.k===k?(ord.asc?' ▲':' ▼'):''));th.onclick=()=>{ord={k,asc:ord.k===k?!ord.asc:(k==='nome'||k==='uf'||k==='v')};tabela()};cab.append(th)});
+  const L=rows.map(r=>Object.assign({v:r.m>0?'Lula':'Flávio'},r));
+  L.sort((a,b)=>{const x=a[ord.k],y=b[ord.k];const c=typeof x==='string'?x.localeCompare(y,'pt-BR'):x-y;return ord.asc?c:-c});
+  const T=$('corpo');T.replaceChildren();
+  const add=(cls,a)=>{const tr=el('tr',cls);a.forEach(x=>tr.append(el('td','',x)));T.append(tr)};
+  L.forEach(r=>add('',[r.nome,r.uf,nI(r.lula),nP(r.lp),nI(r.flavio),nP(r.fp),nM(r.m),r.v]));
+  const ex=D.ext,ev=ex.lula+ex.flavio;
+  add('',['Exterior','ZZ',nI(ex.lula),nP(100*ex.lula/ev),nI(ex.flavio),nP(100*ex.flavio/ev),nM(100*(ex.lula-ex.flavio)/ev),ex.lula>ex.flavio?'Lula':'Flávio']);
+  add('tot',['Brasil','BR',nI(B.lula),nP(100*B.lula/vb),nI(B.flavio),nP(100*B.flavio/vb),nM(100*(B.lula-B.flavio)/vb),'Lula']);
+}
+$('btnTab').onclick=()=>{const h=$('tabela').hidden;$('tabela').hidden=!h;$('btnTab').setAttribute('aria-expanded',String(h));$('btnTab').textContent=h?'Esconder tabela':'Ver tabela completa'};
+$('fonte').textContent='Fonte: TSE (resultados.tse.jus.br), 2º turno de 25/10/2026, arquivo das '+B.hora+' de '+B.data+'. Percentuais sobre os votos válidos (Lula + Flávio) de cada estado. O total nacional inclui o voto no exterior, que não aparece no mapa (Lula '+nI(D.ext.lula)+', Flávio '+nI(D.ext.flavio)+'). Limites dos estados: IBGE, via click_that_hood, simplificados para o desenho.'+(D.verificacao&&!D.verificacao.ok?' ATENÇÃO: a soma dos estados e do exterior difere do total do Brasil no TSE (Lula '+nI(D.verificacao.dif_lula)+', Flávio '+nI(D.verificacao.dif_flavio)+'); a apuração pode estar incompleta.':'');
+titulo();pintar();legenda();ranking();tabela();
+// recolore rótulos se o tema mudar
+try{matchMedia('(prefers-color-scheme: dark)').addEventListener('change',()=>setTimeout(pintar,50))}catch(e){}
+new MutationObserver(()=>setTimeout(pintar,50)).observe(document.documentElement,{attributes:true,attributeFilter:['data-theme']});
+})();
+</script>

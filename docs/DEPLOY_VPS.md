@@ -1,5 +1,11 @@
 # Deploy na VPS Hostinger — runbook
 
+> **Caminho principal do projeto** (decisão de 05/10/2026: VPS primeiro, Git
+> depois, localhost abandonado por enquanto). Pré-requisitos: token do
+> GitHub (PAT classic, escopo `repo`), subdomínio confirmado com DNS
+> apontado, e a senha de acesso do passo 1.1. Enquanto o PR #1 não for
+> mesclado, clonar com `git clone -b feat/modulo-eleicoes ...`.
+
 Mesmo servidor que já hospeda o ERP ContFácil (`/opt/erp-contfacil`,
 porta 8000) e o MecOS. Mail Center entra do mesmo jeito: usuário
 dedicado, systemd, Nginx como proxy reverso, HTTPS via Certbot.
@@ -34,6 +40,18 @@ chown -R mailapp:mailapp /opt/mail-center
 > como senha (mesmo caminho documentado na seção 6.6 do `CLAUDE.md` do
 > MecOS). Depois de confirmar que o clone funcionou, pode revogar o
 > token — não fica salvo em lugar nenhum do servidor.
+
+## 1.1 Senha de acesso (OBRIGATÓRIO antes do passo 2)
+
+Sem isso o sistema sobe **aberto**: qualquer um com o endereço lê as caixas
+de e-mail e envia mensagens em nome das empresas.
+
+```bash
+cd /opt/mail-center && sudo -u mailapp .venv/bin/python -m app.definir_senha
+```
+
+Escolha uma senha de 12+ caracteres. Ela fica só como hash no `.env`.
+Para trocar depois: mesmo comando + `systemctl restart mail-center`.
 
 ## 2. Serviço systemd (mantém rodando, reinicia sozinho)
 
