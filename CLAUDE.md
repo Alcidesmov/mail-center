@@ -195,8 +195,9 @@ anexos(id, mensagem_id FK, nome_arquivo, content_type, tamanho, caminho_disco)
 - Aba **Relatórios** (Relatório 1: Dep. Federal ÷ voto presidencial, blocos e
   desconto editáveis; endpoint `/eleicoes/relatorio`). Detalhes, números e
   relatórios: `docs/ELEICOES_2026.md` e `docs/RELATORIO_01_*.md`.
-- Só 1º turno (04/10/2026). Para o 2º turno (25/10) será preciso descobrir
-  os novos códigos de eleição em `comum/config/ele-c.json`.
+- 1º turno (eleição `6257`/`6259`) e 2º turno de Presidente (eleição `6258`,
+  25/10/2026). O módulo ainda só lê o 1º turno; o mapa do 2º turno existe só
+  como artefato (ver `docs/ELEICOES_2026.md`, seção 7).
 
 ## 7. Não fazer
 
@@ -256,3 +257,5 @@ anexos(id, mensagem_id FK, nome_arquivo, content_type, tamanho, caminho_disco)
 - **v0.7** (07/10/2026) — Aba Relatórios no módulo Eleições (Relatório 1) e
   tentativas (3x) nas leituras do TSE, que devolvia 403 esporádico. Testado
   contra a API real. Não publicado na VPS.
+- **v0.8** (04/11/2026) — Documentado o 2º turno (Presidente, eleição `6258`) e o
+  mapa por estado (artefato). Sem mudança de código.

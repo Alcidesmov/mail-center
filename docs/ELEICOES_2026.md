@@ -114,10 +114,29 @@ Republicanos, PP e União têm candidatos fora do campo dele.
   VPS.
 - Código: PR #1 (`feat/modulo-eleicoes`), ainda em rascunho. Nada no ar.
 
+## 7. 2º turno (25/10/2026) — Presidente
+
+- **Eleição `6258`** (Federal, 2º turno; `6260` é a Estadual). Mesmo formato do 1º turno:
+  `.../ele2026/6258/dados/<uf>/<uf>-c0001-e006258-u.json` (`br`, 27 UFs e `zz` = exterior).
+  O índice `ele-c.json` lista o pleito `3221` (25/10/2026) com essas eleições.
+- **Resultado (100% apurado, arquivo de 25/10 às 23:26):** Lula (PT) **64.256.232**
+  (51,79%, eleito) × Flávio Bolsonaro (PL) **59.826.041** (48,21%). Votos válidos
+  124.082.273; comparecimento 128.236.074 (80,78%); brancos 1.430.496; nulos 2.723.305.
+- Lula venceu em 13 UFs (PI, BA, MA, SE, PE, CE, PB, RN, AL, PA, AM, AP, MG) e Flávio em 14
+  (TO, RJ, SP, DF, ES, RS, MS, GO, PR, MT, AC, SC, RO, RR). Maior % de Lula: PI 75,88%;
+  de Flávio: RR 72,46%.
+- A soma das 27 UFs não fecha o total do Brasil: faltam os votos do **exterior** (`zz`):
+  Lula 200.154 × Flávio 171.497.
+- **Mapa por estado** (artefato privado, dados embutidos de 25/10): Lula, Flávio e
+  "Vencedor" (margem em pp), com ranking e tabela:
+  <https://claude.ai/artifact/Di3tsCie3fzhrVjLFQb2Fe>. Limites dos estados: IBGE via
+  `click_that_hood` (`brazil-states.geojson`), simplificados; o IBGE direto recusou a conexão
+  do ambiente. Não está no Git nem na VPS.
+
 ## 6. Pendências
 
 1. (feito em 07/10) Relatório 1 portado para o módulo.
 2. Confirmar a leitura de "menos 2%".
-3. 2º turno (25/10): achar os novos códigos de eleição em `ele-c.json`.
+3. (feito em 04/11) 2º turno: código `6258`, ver seção 7. Falta portar o mapa ao módulo.
 4. Publicar na VPS (ver `docs/DEPLOY_VPS.md`); sem VPS, o módulo e o link do
    artefato são as únicas formas de ver isso.
