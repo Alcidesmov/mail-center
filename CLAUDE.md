@@ -208,7 +208,8 @@ anexos(id, mensagem_id FK, nome_arquivo, content_type, tamanho, caminho_disco)
   Mesma página existe como artefato privado (dados embutidos de 25/10).
   **Regras de mouse/teclado/toque, formatos de número, cores e checklist para reaproveitar em
   outro projeto:** `docs/COMO_FOI_FEITO_O_MAPA.md` (gerado a partir do arquivo real). Scripts:
-  `scripts/mapa/gerar_geo.py` (contornos) e `scripts/mapa/rampas.py` (cores). O contorno de destaque
+  `scripts/mapa/gerar_geo.py` (contornos) e `scripts/mapa/rampas.py` (cores). `scripts/mapa/mapa_turno2_standalone.py`: arquivo único (só biblioteca padrão) que baixa os
+  dados do TSE, confere e grava a página HTML completa do mapa (`python3 mapa_turno2_standalone.py [saida.html|--verificar]`). O contorno de destaque
   é uma camada própria (`.ring`); **nunca reordenar no DOM um estado que pode estar focado** (tira o
   foco do teclado no Chromium; erro corrigido na v0.10).
 
@@ -279,3 +280,6 @@ anexos(id, mensagem_id FK, nome_arquivo, content_type, tamanho, caminho_disco)
   tirava o foco); rótulos do mar e contornos não capturam mais o mouse; retângulo de foco padrão
   escondido (o contorno é o indicador). Guia de reaproveitamento (`docs/COMO_FOI_FEITO_O_MAPA.md`) e
   scripts `scripts/mapa/`. Testado no Chromium (mouse, teclado, toque emulado, temas, dados reais).
+- **v0.11** (04/11/2026) — `scripts/mapa/mapa_turno2_standalone.py`: o mapa do 2º turno em um único .py
+  (dados do TSE ao vivo + conferência + HTML), para levar a outra sessão/projeto. Testado: dados e página
+  idênticos aos do módulo.
