@@ -54,8 +54,11 @@ h1{font-size:clamp(28px,5vw,44px);line-height:1.05;margin:6px 0 0;font-weight:80
 .mapbox h2,.painel h2{font-size:15px;margin:2px 4px 6px;font-weight:700}
 svg{display:block;width:100%;height:auto}
 .uf path{stroke:var(--surface);stroke-width:1.1;stroke-linejoin:round;cursor:pointer;transition:opacity .12s}
-.uf.sel path,.uf.hov path{stroke:var(--ink);stroke-width:2.2}
+.ring{fill:none;stroke:var(--ink);stroke-width:2.2;stroke-linejoin:round;pointer-events:none}
 .rot{font:700 12.5px var(--font);pointer-events:none}
+/* o contorno (.ring) já é o indicador de foco do teclado; o retângulo padrão do navegador ficaria torto num SVG */
+.uf:focus-visible{outline:none}
+.oc{pointer-events:none}
 .oc text{font:700 12.5px var(--font);fill:var(--ink)} .oc line{stroke:var(--muted);stroke-width:.8}
 .legenda{display:flex;flex-wrap:wrap;gap:4px 14px;margin:8px 4px 2px;font-size:12.5px;color:var(--ink2)}
 .legenda .t{width:100%;font-weight:600;color:var(--ink)}
@@ -164,7 +167,9 @@ const G=D.geo;let view='lula',sel=null,hov=null;
 try{const g=localStorage.getItem('mapa2t_view');if(g==='lula'||g==='flavio'||g==='vencedor')view=g}catch(e){}
 const svg=sv('svg',{viewBox:'0 0 '+G.W+' '+G.H,role:'group','aria-label':'Mapa do Brasil por estado'});
 const gp=sv('g',{}),gl=sv('g',{}),go=sv('g',{class:'oc'});
-svg.append(gp,go,gl);
+// contornos de destaque: camada própria por cima dos estados (nunca mover o estado de lugar: isso tira o foco do teclado)
+const rs=sv('path',{class:'ring'}),rh=sv('path',{class:'ring'});
+svg.append(gp,rs,rh,go,gl);
 const OCEAN=['RN','PB','PE','AL','SE'].sort((a,b)=>G.uf[a].cy-G.uf[b].cy);
 let ly=-1e9;const oy={};OCEAN.forEach(u=>{ly=Math.max(G.uf[u].cy,ly+15);oy[u]=ly});
 const gs={},ps={},ts={},sw={};
@@ -242,7 +247,7 @@ function ranking(){
 function marcar(){
   UFS.forEach(u=>{gs[u].classList.toggle('sel',u===sel);gs[u].classList.toggle('hov',u===hov)});
   document.querySelectorAll('#rank li').forEach(li=>{li.classList.toggle('sel',li.dataset.uf===sel);li.classList.toggle('hov',li.dataset.uf===hov)});
-  if(hov)gp.append(gs[hov]);else if(sel)gp.append(gs[sel]);
+  rs.setAttribute('d',sel?G.uf[sel].d:'');rh.setAttribute('d',hov?G.uf[hov].d:'');
   detalhe(hov||sel);
 }
 function setHov(u){hov=u;marcar()}

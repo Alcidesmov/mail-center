@@ -206,6 +206,11 @@ anexos(id, mensagem_id FK, nome_arquivo, content_type, tamanho, caminho_disco)
   `app/dados/mapa_turno2.html` (página; `__DATA__` é trocado pelos dados) e
   `app/dados/br_estados_geo.json` (limites simplificados, via `click_that_hood`/IBGE).
   Mesma página existe como artefato privado (dados embutidos de 25/10).
+  **Regras de mouse/teclado/toque, formatos de número, cores e checklist para reaproveitar em
+  outro projeto:** `docs/COMO_FOI_FEITO_O_MAPA.md` (gerado a partir do arquivo real). Scripts:
+  `scripts/mapa/gerar_geo.py` (contornos) e `scripts/mapa/rampas.py` (cores). O contorno de destaque
+  é uma camada própria (`.ring`); **nunca reordenar no DOM um estado que pode estar focado** (tira o
+  foco do teclado no Chromium; erro corrigido na v0.10).
 
 ## 7. Não fazer
 
@@ -270,3 +275,7 @@ anexos(id, mensagem_id FK, nome_arquivo, content_type, tamanho, caminho_disco)
 - **v0.9** (04/11/2026) — Mapa do 2º turno dentro do módulo Eleições (dados ao
   vivo do TSE, conferência de totais). Testado contra a API real e no navegador
   (login, abas, clique, tabela). Não publicado na VPS.
+- **v0.10** (04/11/2026) — Mapa do 2º turno: corrigido o teclado (o destaque movia o estado no DOM e
+  tirava o foco); rótulos do mar e contornos não capturam mais o mouse; retângulo de foco padrão
+  escondido (o contorno é o indicador). Guia de reaproveitamento (`docs/COMO_FOI_FEITO_O_MAPA.md`) e
+  scripts `scripts/mapa/`. Testado no Chromium (mouse, teclado, toque emulado, temas, dados reais).
